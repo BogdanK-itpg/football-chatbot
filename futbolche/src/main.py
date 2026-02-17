@@ -1,7 +1,11 @@
 import chatbot
 from datetime import datetime
+from db import initialize_database
 
 LOG_FILE = "../commands.log"
+
+# Initialize database immediately on program start
+initialize_database()
 
 def log_command(user_input, result):
     with open(LOG_FILE, "a", encoding="utf-8") as f:
