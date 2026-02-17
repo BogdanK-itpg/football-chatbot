@@ -36,3 +36,5 @@ def execute_query(query, params=(), fetch=False):
 
     finally:
         conn.close()
+
+

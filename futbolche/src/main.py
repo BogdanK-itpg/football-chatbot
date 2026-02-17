@@ -1,7 +1,7 @@
 import chatbot
 from datetime import datetime
 
-LOG_FILE = "commands.log"
+LOG_FILE = "../commands.log"
 
 def log_command(user_input, result):
     with open(LOG_FILE, "a", encoding="utf-8") as f:
