@@ -1,7 +1,8 @@
+import os
 import sqlite3
 from sqlite3 import Error
 
-DB_PATH = "sql/football.db"
+DB_PATH = "../sql/football.db"
 
 def get_connection():
     try:
