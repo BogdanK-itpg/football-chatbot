@@ -125,6 +125,104 @@
         "Командата не е разпозната.",
         "Моля използвайте валидна команда."
       ]
+    },
+
+    {
+      "tag": "add_player",
+      "patterns": [
+        "добави играч [full_name] в клуб [club_identifier] позиция [position] номер [number] националност [nationality] дата на раждане [birth_date] статус [status]",
+        "добави играч [full_name] на клуб [club_identifier]",
+        "регистрирай играч [full_name]",
+        "създай играч [full_name]"
+      ],
+      "responses": [
+        "Играчът беше добавен успешно.",
+        "Операцията е успешна.",
+        "Играчът е регистриран."
+      ]
+    },
+
+    {
+      "tag": "list_players",
+      "patterns": [
+        "покажи играчи на клуб [club_identifier]",
+        "списък с играчи на [club_identifier]",
+        "покажи всички играчи",
+        "всички играчи",
+        "дай списък с играчи",
+        "изведи играчи"
+      ],
+      "responses": [
+        "Ето списък с играчи:",
+        "Наличните играчи са:",
+        "Извеждам играчите:"
+      ]
+    },
+
+    {
+      "tag": "list_all_players",
+      "patterns": [
+        "покажи всички играчи",
+        "всички играчи",
+        "списък с всички играчи"
+      ],
+      "responses": [
+        "Ето списък с всички играчи:"
+      ]
+    },
+
+    {
+      "tag": "update_player_position",
+      "patterns": [
+        "смени позиция на [player_identifier] на [new_position]",
+        "промени позиция на [player_identifier]",
+        "обнови позиция на [player_identifier]"
+      ],
+      "responses": [
+        "Позицията е обновена.",
+        "Промяната е записана."
+      ]
+    },
+
+    {
+      "tag": "update_player_number",
+      "patterns": [
+        "смени номер на [player_identifier] на [new_number]",
+        "промени номер на [player_identifier]",
+        "обнови номер на [player_identifier]"
+      ],
+      "responses": [
+        "Номерът е обновен.",
+        "Промяната е записана."
+      ]
+    },
+
+    {
+      "tag": "update_player_status",
+      "patterns": [
+        "смени статус на [player_identifier] на [new_status]",
+        "промени статус на [player_identifier]",
+        "обнови статус на [player_identifier]"
+      ],
+      "responses": [
+        "Статусът е обновен.",
+        "Промяната е записана."
+      ]
+    },
+
+    {
+      "tag": "delete_player",
+      "patterns": [
+        "изтрий играч [player_identifier]",
+        "премахни играч [player_identifier]",
+        "махни играч [player_identifier]",
+        "изтриване на играч [player_identifier]"
+      ],
+      "responses": [
+        "Играчът беше изтрит.",
+        "Операцията по изтриване е успешна.",
+        "Играчът е премахнат от системата."
+      ]
     }
   ]
 }
