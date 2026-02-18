@@ -15,10 +15,13 @@ CREATE TABLE clubs (
 -- =====================================
 CREATE TABLE players (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
+    club_id INTEGER NOT NULL,
+    full_name TEXT NOT NULL,
+    birth_date TEXT NOT NULL,
+    nationality TEXT NOT NULL,
     position TEXT NOT NULL CHECK(position IN ('GK','DF','MF','FW')),
     number INTEGER NOT NULL,
-    club_id INTEGER NOT NULL,
+    status TEXT NOT NULL,
     FOREIGN KEY (club_id) REFERENCES clubs(id) ON DELETE CASCADE
 );
 
