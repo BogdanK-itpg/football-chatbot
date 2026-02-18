@@ -54,9 +54,6 @@ def build_patterns():
 
 def pattern_to_regex(pattern, needs_param):
     """Convert a natural language pattern to a regex pattern with named capture groups."""
-    # Escape the pattern but keep placeholders intact
-    # We'll split the pattern by placeholders, escape each part, then reassemble
-    
     placeholder_pattern = r'\[(\w+)\]'
     parts = re.split(placeholder_pattern, pattern)
     
@@ -66,21 +63,24 @@ def pattern_to_regex(pattern, needs_param):
         flexible = escaped.replace(r'\ ', r'\s+')
         return rf"^{flexible}$"
     
-    # parts will be like: ['text before', 'placeholder1', 'text after', 'placeholder2', ...]
-    # We need to escape the text parts but keep placeholders as capture groups
+    # parts: [text_before, placeholder1, text_after1, placeholder2, ...]
+    # Process text parts: strip, escape, replace spaces with \s+
+    # Join all parts with \s+ to allow flexible spacing between tokens
     result_parts = []
     for i, part in enumerate(parts):
         if i % 2 == 0:
-            # Text part - escape it
-            escaped = re.escape(part.lower().strip())
-            flexible = escaped.replace(r'\ ', r'\s+')
-            result_parts.append(flexible)
+            # Text part - strip whitespace, escape, and normalize spaces
+            stripped = part.strip()
+            if stripped:
+                escaped = re.escape(stripped.lower())
+                flexible = escaped.replace(r'\ ', r'\s+')
+                result_parts.append(flexible)
         else:
             # Placeholder - convert to named capture group
             result_parts.append(f'(?P<{part}>.+?)')
     
-    # Join all parts
-    regex = ''.join(result_parts)
+    # Join with \s+ to require at least one whitespace between elements
+    regex = r'\s+'.join(result_parts)
     return rf"^{regex}$"
 
 def parse_input(user_input):
