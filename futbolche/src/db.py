@@ -2,8 +2,10 @@ import os
 import sqlite3
 from sqlite3 import Error
 
-DB_PATH = "../sql/football.db"
-SCHEMA_PATH = "../sql/schema.sql"
+# Get the directory where this db.py file is located
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "..", "sql", "football.db")
+SCHEMA_PATH = os.path.join(BASE_DIR, "..", "sql", "schema.sql")
 
 def initialize_database():
     """Create tables if they don't exist"""
