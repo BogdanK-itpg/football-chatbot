@@ -2,6 +2,7 @@ import re
 import json
 import os
 import clubs_service
+import players_service
 
 # Load intents from JSON file
 INTENTS_FILE = os.path.join(os.path.dirname(__file__), 'intents.json')
@@ -38,9 +39,11 @@ def build_patterns():
             # Cache responses for this intent
             _responses_cache[tag] = responses
             
-            # Determine if this intent expects a parameter
-            # Intents that typically have a club name parameter
-            needs_param = tag in ['add_club', 'delete_club', 'update_club']
+            # Determine if this intent expects parameters
+            needs_param = tag in ['add_club', 'delete_club', 'update_club',
+                                  'add_player', 'list_players', 'list_all_players',
+                                  'update_player_position', 'update_player_number',
+                                  'update_player_status', 'delete_player']
             
             for pattern in patterns:
                 # Convert pattern to regex
@@ -50,56 +53,38 @@ def build_patterns():
     return _patterns_cache
 
 def pattern_to_regex(pattern, needs_param):
-    """Convert a natural language pattern to a regex pattern."""
-    # Escape special regex characters but keep spaces
-    escaped = re.escape(pattern.lower().strip())
+    """Convert a natural language pattern to a regex pattern with named capture groups."""
+    # Escape the pattern but keep placeholders intact
+    # We'll split the pattern by placeholders, escape each part, then reassemble
     
-    # If pattern ends with a specific word (like a club name example),
-    # we need to make that part dynamic to capture any name
-    # Look for patterns like "добави клуб Левски" where "Левски" is an example
+    placeholder_pattern = r'\[(\w+)\]'
+    parts = re.split(placeholder_pattern, pattern)
     
-    # Split into words
-    words = pattern.lower().strip().split()
+    if len(parts) == 1:
+        # No placeholders
+        escaped = re.escape(pattern.lower().strip())
+        flexible = escaped.replace(r'\ ', r'\s+')
+        return rf"^{flexible}$"
     
-    # For intents that need parameters, if the pattern has 3+ words and the last word looks like a proper noun (capitalized in original),
-    # treat the last part as a parameter capture
-    if needs_param and len(words) >= 3:
-        # Check if the last word is capitalized in the original (indicating it's an example name)
-        original_words = pattern.strip().split()
-        if original_words[-1][0].isupper():
-            # The last word is an example - make it a capture group
-            # Rebuild regex: first part fixed, then capture everything after
-            fixed_part = ' '.join(words[:-1])
-            return rf"{re.escape(fixed_part)}\s+(?P<club_name>.+)$"
+    # parts will be like: ['text before', 'placeholder1', 'text after', 'placeholder2', ...]
+    # We need to escape the text parts but keep placeholders as capture groups
+    result_parts = []
+    for i, part in enumerate(parts):
+        if i % 2 == 0:
+            # Text part - escape it
+            escaped = re.escape(part.lower().strip())
+            flexible = escaped.replace(r'\ ', r'\s+')
+            result_parts.append(flexible)
+        else:
+            # Placeholder - convert to named capture group
+            result_parts.append(f'(?P<{part}>.+?)')
     
-    # For patterns that are just examples with a parameter in the middle like "добави клуб Левски"
-    # we can also try to make them more flexible
-    
-    # If the pattern contains "клуб" and ends with a word, try to capture after "клуб"
-    if needs_param and 'клуб' in escaped:
-        # Split at the escaped "клуб"
-        parts = escaped.split(re.escape('клуб'))
-        if len(parts) == 2:
-            # Pattern is something like "добави\ клуб\ Левски"
-            # Make it: "добави\s+клуб\s+(.+)"
-            before = parts[0].rstrip(r'\ ')
-            after = parts[1].lstrip(r'\ ')
-            if after:
-                # There's something after клуб - treat as example, replace with capture
-                return rf"{before}\s+клуб\s+(?P<club_name>.+)$"
-            else:
-                # клуб is at the end, need to capture after
-                return rf"{before}\s+клуб\s+(?P<club_name>.+)$"
-    
-    # For patterns without parameters or that don't match the above,
-    # create a flexible regex that matches the whole pattern with optional variations
-    # Replace escaped spaces with \s+ to allow multiple spaces
-    flexible = escaped.replace(r'\ ', r'\s+')
-    # Add start and end anchors
-    return rf"^{flexible}$"
+    # Join all parts
+    regex = ''.join(result_parts)
+    return rf"^{regex}$"
 
 def parse_input(user_input):
-    """Parse user input and return (intent_tag, parameter)"""
+    """Parse user input and return (intent_tag, parameters_dict)"""
     user_input_lower = user_input.lower().strip()
     
     patterns = build_patterns()
@@ -107,10 +92,14 @@ def parse_input(user_input):
     for tag, pattern, needs_param in patterns:
         match = re.search(pattern, user_input_lower)
         if match:
-            # Check if pattern has a named capture group for parameters
-            if needs_param and 'club_name' in match.groupdict():
-                param = match.group('club_name').strip()
-                return tag, param
+            # Extract all named capture groups as a dictionary
+            params = {}
+            for name, value in match.groupdict().items():
+                if value:
+                    params[name] = value.strip()
+            
+            if params:
+                return tag, params
             return tag, None
     
     return "unknown", None
@@ -125,7 +114,7 @@ def get_random_response(intent_tag):
             return random.choice(responses)
     return None
 
-def handle_intent(intent, param):
+def handle_intent(intent, params):
     """Handle the parsed intent and return a response."""
     # Get a response from intents.json
     response = get_random_response(intent)
@@ -147,21 +136,70 @@ def handle_intent(intent, param):
         return help_text.strip()
     
     if intent == "add_club":
-        if not param or param.strip() == "":
+        if not params or 'club_name' not in params:
             return "Името не може да бъде празно."
-        return clubs_service.add_club(param)
+        return clubs_service.add_club(params['club_name'])
     
     if intent == "list_clubs":
         return clubs_service.get_all_clubs()
     
     if intent == "delete_club":
-        if not param or param.strip() == "":
+        if not params or 'club_name' not in params:
             return "Името не може да бъде празно."
-        return clubs_service.delete_club(param)
+        return clubs_service.delete_club(params['club_name'])
     
     if intent == "update_club":
         # TODO: Implement update functionality
         return "Функцията за редактиране все още не е реализирана."
+    
+    # Player intents
+    if intent == "add_player":
+        # Required parameters: full_name, club_identifier, position, number, nationality, birth_date, status
+        required = ['full_name', 'club_identifier', 'position', 'number', 'nationality', 'birth_date', 'status']
+        if not all(param in params for param in required):
+            return "Недостатъчни параметри. Използвайте: Добави играч [име] в клуб [клуб] позиция [позиция] номер [номер] националност [националност] дата на раждане [дата] статус [статус]"
+        
+        club_id = players_service.get_club_id(params['club_identifier'])
+        if not club_id:
+            return f"Клуб '{params['club_identifier']}' не съществува."
+        
+        return players_service.add_player(
+            club_id,
+            params['full_name'],
+            params['birth_date'],
+            params['nationality'],
+            params['position'],
+            params['number'],
+            params['status']
+        )
+    
+    if intent == "list_players":
+        if params and 'club_identifier' in params:
+            return players_service.get_players_by_club(params['club_identifier'])
+        return players_service.get_players_by_club()
+    
+    if intent == "list_all_players":
+        return players_service.get_players_by_club()
+    
+    if intent == "update_player_position":
+        if not params or 'player_identifier' not in params or 'new_position' not in params:
+            return "Недостатъчни параметри. Използвайте: Смени позиция на [име/ID] на [позиция]"
+        return players_service.update_player_position(params['player_identifier'], params['new_position'])
+    
+    if intent == "update_player_number":
+        if not params or 'player_identifier' not in params or 'new_number' not in params:
+            return "Недостатъчни параметри. Използвайте: Смени номер на [име/ID] на [номер]"
+        return players_service.update_player_number(params['player_identifier'], params['new_number'])
+    
+    if intent == "update_player_status":
+        if not params or 'player_identifier' not in params or 'new_status' not in params:
+            return "Недостатъчни параметри. Използвайте: Смени статус на [име/ID] на [статус]"
+        return players_service.update_player_status(params['player_identifier'], params['new_status'])
+    
+    if intent == "delete_player":
+        if not params or 'player_identifier' not in params:
+            return "Недостатъчен параметър. Използвайте: Изтрий играч [име/ID]"
+        return players_service.delete_player(params['player_identifier'])
     
     return response
 
