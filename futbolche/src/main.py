@@ -1,15 +1,10 @@
-import chatbot
-from datetime import datetime
+from chatbot.chatbot import parse_input as parse_input_nlu, handle_intent as handle_intent_router
 from db import initialize_database
+from utils.logger import log_command
 
-LOG_FILE = "../commands.log"
 
 # Initialize database immediately on program start
 initialize_database()
-
-def log_command(user_input, result):
-    with open(LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(f"{datetime.now()} | {user_input} | {result}\n")
 
 
 def main():
@@ -19,8 +14,8 @@ def main():
     while True:
         user_input = input(">> ")
 
-        intent, param = chatbot.parse_input(user_input)
-        response = chatbot.handle_intent(intent, param)
+        intent, params = parse_input_nlu(user_input)
+        response = handle_intent_router(intent, params)
 
         if response == "exit":
             print("До скоро!")

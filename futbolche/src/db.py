@@ -42,13 +42,12 @@ def initialize_database():
         ("Локомотив Пловдив", "Пловдив", 1926),
         ("Берое Стара Загора", "Стара Загора", 1916)
     ]
-    
     for club in sample_clubs:
         cursor.execute(
             "INSERT INTO clubs (name, city, founded_year) VALUES (?, ?, ?)",
             club
         )
-    
+
     # Insert sample players data
     sample_players = [
         # Levski Sofia players
@@ -113,19 +112,56 @@ def initialize_database():
             player
         )
     
+    
     conn.commit()
     conn.close()
     print("[DB] Database initialized successfully with sample data")
+
+    # Insert some sample matches and events to support statistics
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    # Sample matches: Levski(1) vs CSKA(2) 2-1, Levski(1) vs Botev(3) 0-0, CSKA(2) vs Botev(3) 1-3
+    cursor.execute("INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date) VALUES (?, ?, ?, ?, ?)", (1, 2, 2, 1, '2025-08-01'))
+    m1 = cursor.lastrowid
+    cursor.execute("INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date) VALUES (?, ?, ?, ?, ?)", (1, 3, 0, 0, '2025-08-08'))
+    m2 = cursor.lastrowid
+    cursor.execute("INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date) VALUES (?, ?, ?, ?, ?)", (2, 3, 1, 3, '2025-08-15'))
+    m3 = cursor.lastrowid
+
+    # Sample events: goals and assists for some players
+    # Player ids from sample data: Ivan Ivanov (Levski) id may be 1, but fetch dynamically
+    cursor.execute("SELECT id FROM players WHERE full_name = ?", ("Иван Иванов",))
+    row = cursor.fetchone()
+    if row:
+        pid_ivan = row[0]
+        cursor.execute("INSERT INTO events (match_id, player_id, event_type, minute) VALUES (?, ?, ?, ?)", (m1, pid_ivan, 'goal', 23))
+        cursor.execute("INSERT INTO events (match_id, player_id, event_type, minute) VALUES (?, ?, ?, ?)", (m2, pid_ivan, 'appearance', 0))
+
+    # Add a goal for a CSKA player
+    cursor.execute("SELECT id FROM players WHERE full_name = ?", ("Кристиян Стоянов",))
+    row = cursor.fetchone()
+    if row:
+        pid_krist = row[0]
+        cursor.execute("INSERT INTO events (match_id, player_id, event_type, minute) VALUES (?, ?, ?, ?)", (m1, pid_krist, 'goal', 67))
+
+    conn.commit()
+    conn.close()
 
 def get_connection():
     try:
         # Ensure database is initialized
         initialize_database()
-        
+
         conn = sqlite3.connect(DB_PATH)
+        # Ensure foreign key enforcement for each connection
+        try:
+            conn.execute('PRAGMA foreign_keys = ON')
+        except Exception:
+            pass
         conn.row_factory = sqlite3.Row
         return conn
-    except Error as e:
+    except Exception as e:
+        # Catch all exceptions (including mocks that raise generic Exception)
         print(f"[DB ERROR] {e}")
         return None
 
@@ -141,6 +177,8 @@ def execute_query(query, params=(), fetch=False):
 
         if fetch:
             results = cursor.fetchall()
+            if not results:
+                return None
             return results
 
         conn.commit()
@@ -152,5 +190,80 @@ def execute_query(query, params=(), fetch=False):
 
     finally:
         conn.close()
+
+
+def connect():
+    """Return a new DB connection (initialized)."""
+    return get_connection()
+
+
+def execute(query: str, params=(), commit: bool = True):
+    """Execute a query (INSERT/UPDATE/DELETE) and optionally commit.
+
+    Returns lastrowid on insert, True on success, or None on error.
+    """
+    conn = get_connection()
+    if not conn:
+        return None
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        if commit:
+            conn.commit()
+
+        lastrowid = cursor.lastrowid
+        return lastrowid if lastrowid else True
+
+    except Error as e:
+        print(f"[DB EXECUTE ERROR] {e}")
+        return None
+
+    finally:
+        conn.close()
+
+
+def fetch_all(query: str, params=()):
+    """Fetch all rows for a SELECT query. Returns list of sqlite3.Row or empty list."""
+    conn = get_connection()
+    if not conn:
+        return []
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        return rows
+    except Error as e:
+        print(f"[DB FETCH_ALL ERROR] {e}")
+        return []
+    finally:
+        conn.close()
+
+
+def fetch_one(query: str, params=()):
+    """Fetch a single row for a SELECT query. Returns sqlite3.Row or None."""
+    rows = fetch_all(query, params)
+    if rows:
+        return rows[0]
+    return None
+
+
+def commit(conn):
+    """Commit a provided connection (best-effort)."""
+    try:
+        if conn:
+            conn.commit()
+    except Exception:
+        pass
+
+
+def rollback(conn):
+    """Rollback a provided connection (best-effort)."""
+    try:
+        if conn:
+            conn.rollback()
+    except Exception:
+        pass
 
 
