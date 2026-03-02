@@ -88,3 +88,31 @@ def get_player_statistics(identifier):
         'yellow_cards': yellows,
         'red_cards': reds
     }
+
+
+def get_player_advanced_metrics(identifier):
+    """Compute advanced per-90 metrics for a player: minutes played (approx), goals/90, assists/90."""
+    stats = get_player_statistics(identifier)
+    if not stats:
+        return None
+
+    # Approximate minutes played as appearances * 90 (best-effort when no minutes data available)
+    appearances = stats.get('appearances', 0) or 0
+    minutes_played = appearances * 90
+
+    goals = stats.get('goals', 0) or 0
+    assists = stats.get('assists', 0) or 0
+
+    if minutes_played > 0:
+        goals_per_90 = round((goals * 90) / minutes_played, 2)
+        assists_per_90 = round((assists * 90) / minutes_played, 2)
+    else:
+        goals_per_90 = 0.0
+        assists_per_90 = 0.0
+
+    return {
+        'player_id': stats['player_id'],
+        'minutes_played': minutes_played,
+        'goals_per_90': goals_per_90,
+        'assists_per_90': assists_per_90
+    }

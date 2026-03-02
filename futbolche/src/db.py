@@ -128,6 +128,18 @@ def initialize_database():
     cursor.execute("INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date) VALUES (?, ?, ?, ?, ?)", (2, 3, 1, 3, '2025-08-15'))
     m3 = cursor.lastrowid
 
+    # Additional sample matches to flesh out the demo dataset
+    cursor.execute("INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date) VALUES (?, ?, ?, ?, ?)", (4, 5, 1, 2, '2025-08-02'))
+    m4 = cursor.lastrowid
+    cursor.execute("INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date) VALUES (?, ?, ?, ?, ?)", (6, 7, 0, 1, '2025-08-03'))
+    m5 = cursor.lastrowid
+    cursor.execute("INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date) VALUES (?, ?, ?, ?, ?)", (8, 7, 2, 2, '2025-08-04'))
+    m6 = cursor.lastrowid
+    cursor.execute("INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date) VALUES (?, ?, ?, ?, ?)", (2, 4, 3, 1, '2025-08-05'))
+    m7 = cursor.lastrowid
+    cursor.execute("INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date) VALUES (?, ?, ?, ?, ?)", (3, 5, 1, 1, '2025-08-06'))
+    m8 = cursor.lastrowid
+
     # Sample events: goals and assists for some players
     # Player ids from sample data: Ivan Ivanov (Levski) id may be 1, but fetch dynamically
     cursor.execute("SELECT id FROM players WHERE full_name = ?", ("Иван Иванов",))
@@ -143,6 +155,32 @@ def initialize_database():
     if row:
         pid_krist = row[0]
         cursor.execute("INSERT INTO events (match_id, player_id, event_type, minute) VALUES (?, ?, ?, ?)", (m1, pid_krist, 'goal', 67))
+
+    # Additional events for demo: goals, assists, bookings across different matches/players
+    cursor.execute("SELECT id FROM players WHERE full_name = ? AND club_id = 2", ("Димитър Иванов",))
+    row = cursor.fetchone()
+    if row:
+        pid_dim = row[0]
+        cursor.execute("INSERT INTO events (match_id, player_id, event_type, minute) VALUES (?, ?, ?, ?)", (m7, pid_dim, 'goal', 54))
+
+    cursor.execute("SELECT id FROM players WHERE full_name = ? AND club_id = 3", ("Васил Лечков",))
+    row = cursor.fetchone()
+    if row:
+        pid_vasil = row[0]
+        cursor.execute("INSERT INTO events (match_id, player_id, event_type, minute) VALUES (?, ?, ?, ?)", (m3, pid_vasil, 'goal', 12))
+        cursor.execute("INSERT INTO events (match_id, player_id, event_type, minute) VALUES (?, ?, ?, ?)", (m3, pid_vasil, 'assist', 33))
+
+    cursor.execute("SELECT id FROM players WHERE full_name = ? AND club_id = 4", ("Ивелин Попов",))
+    row = cursor.fetchone()
+    if row:
+        pid_ip = row[0]
+        cursor.execute("INSERT INTO events (match_id, player_id, event_type, minute) VALUES (?, ?, ?, ?)", (m4, pid_ip, 'yellow', 77))
+
+    cursor.execute("SELECT id FROM players WHERE full_name = ? AND club_id = 6", ("Борислав Димитров",))
+    row = cursor.fetchone()
+    if row:
+        pid_boris = row[0]
+        cursor.execute("INSERT INTO events (match_id, player_id, event_type, minute) VALUES (?, ?, ?, ?)", (m5, pid_boris, 'goal', 85))
 
     conn.commit()
     conn.close()

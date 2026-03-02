@@ -127,5 +127,92 @@
       "responses": ["Ето статистиката за играча:"],
       "examples": ["покажи статистика на играч [player_identifier]"]
     }
+    ,
+    {
+      "tag": "player_metrics",
+      "patterns": [
+        "покажи метрики на играч [player_identifier]",
+        "покажи разширени метрики на играч [player_identifier]",
+        "метрики на играч [player_identifier]",
+        "покажи показатели на играч [player_identifier]"
+      ],
+      "responses": ["Ето разширените метрики за играча:"],
+      "examples": ["покажи метрики на играч [player_identifier]"]
+    }
+    ,
+    {
+      "tag": "transfer_player",
+      "patterns": [
+        "трансферирай играч [player_identifier] в клуб [club_identifier]",
+        "прехвърли играч [player_identifier] в [club_identifier]",
+        "трансфер [player_identifier] -> [club_identifier]"
+      ],
+      "responses": ["Играчът беше трансфериран."],
+      "examples": ["трансферирай играч [player_identifier] в клуб [club_identifier]"]
+    },
+    {
+      "tag": "record_match",
+      "patterns": [
+        "запиши мач [home_team] срещу [away_team] дата [match_date] резултат [home_goals]-[away_goals]",
+        "добави мач [home_team] vs [away_team] на [match_date] резултат [home_goals]-[away_goals]",
+        "регистрирай мач [home_team] - [away_team] [home_goals]:[away_goals] на [match_date]"
+      ],
+      "responses": ["Мачът беше записан."],
+      "examples": ["запиши мач [home_team] срещу [away_team] дата [match_date] резултат [home_goals]-[away_goals]"]
+    },
+    {
+      "tag": "show_match",
+      "patterns": ["покажи мач [match_id]", "информация за мач [match_id]", "детайли за мач [match_id]"],
+      "responses": ["Ето мача:"],
+      "examples": ["покажи мач [match_id]"]
+    },
+    {
+      "tag": "create_league",
+      "patterns": ["създай лига [league_name] сезон [season]", "добави лига [league_name] [season]"],
+      "responses": ["Лигата беше създадена."],
+      "examples": ["създай лига [league_name] сезон [season]"]
+    },
+    {
+      "tag": "add_club_to_league",
+      "patterns": ["добави клуб [club_identifier] в лига [league_identifier]", "включи [club_identifier] в [league_identifier]"],
+      "responses": ["Клубът беше добавен в лигата."],
+      "examples": ["добави клуб [club_identifier] в лига [league_identifier]"]
+    },
+    {
+      "tag": "get_league_teams",
+      "patterns": ["покажи отбори в лига [league_identifier]", "покажи отборите на [league_identifier]"],
+      "responses": ["Ето отборите в лигата:"],
+      "examples": ["покажи отбори в лига [league_identifier]"]
+    },
+    {
+      "tag": "generate_round_robin",
+      "patterns": ["генерирай кръгове за лига [league_identifier]", "създай кръгове [league_identifier]"],
+      "responses": ["Календарът беше генериран."],
+      "examples": ["генерирай кръгове за лига [league_identifier]"]
+    },
+    {
+      "tag": "get_standings",
+      "patterns": ["покажи класиране [league_identifier]", "класиране на лига [league_identifier]"],
+      "responses": ["Ето класирането:"],
+      "examples": ["покажи класиране [league_identifier]"]
+    },
+    {
+      "tag": "record_event",
+      "patterns": [
+        "запиши гол [player_identifier] в мач [match_id] минута [minute]",
+        "запиши асист [player_identifier] в мач [match_id] минута [minute]",
+        "запиши жълт картон [player_identifier] в мач [match_id] минута [minute]",
+        "запиши червен картон [player_identifier] в мач [match_id] минута [minute]",
+        "запиши поява [player_identifier] в мач [match_id]"
+      ],
+      "responses": ["Събитието беше записано."],
+      "examples": ["запиши гол [player_identifier] в мач [match_id] минута [minute]"]
+    },
+    {
+      "tag": "get_fixtures",
+      "patterns": ["покажи мачове в лига [league_identifier]", "покажи кръгове за лига [league_identifier]"],
+      "responses": ["Ето мачовете:"],
+      "examples": ["покажи мачове в лига [league_identifier]"]
+    }
   ]
 }

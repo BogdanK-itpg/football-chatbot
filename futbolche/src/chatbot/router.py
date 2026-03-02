@@ -1,6 +1,7 @@
 from typing import Optional, Dict
 from services.clubs_service import create_club, list_clubs, delete_club, update_club
 import services.players_service as players
+import services.matches_service as matches
 from .nlu import _load_intents
 import services.statistics_service as stats
 
@@ -115,5 +116,50 @@ def handle_intent(intent: str, params: Optional[Dict[str, str]]) -> str:
         return (f"Статистика за играч {params['player_identifier']}:\n"
                 f"Голове: {stats_res['goals']}, Асистенции: {stats_res['assists']},\n"
                 f"Появи: {stats_res['appearances']}, Жълти: {stats_res['yellow_cards']}, Червени: {stats_res['red_cards']}")
+
+    if intent == 'player_metrics':
+        if not params or 'player_identifier' not in params:
+            return "Недостатъчни параметри. Формат: покажи метрики на играч [player_identifier]"
+        adv = stats.get_player_advanced_metrics(params['player_identifier'])
+        if not adv:
+            return f"Играч '{params['player_identifier']}' не съществува."
+        return (f"Разширени метрики за {params['player_identifier']}:\n"
+                f"Мин. (прибл.): {adv['minutes_played']}, Гол/90: {adv['goals_per_90']}, Асист/90: {adv['assists_per_90']}")
+
+    # --- Matches & Events ---
+    if intent == 'record_match':
+        if not params:
+            return "Недостатъчни параметри. Формат: запиши мач [home_team] срещу [away_team] дата [match_date] резултат [home_goals]-[away_goals]"
+        return matches.record_match(
+            params.get('home_team'),
+            params.get('away_team'),
+            params.get('match_date'),
+            params.get('home_goals'),
+            params.get('away_goals'),
+            params.get('league')
+        )
+
+    if intent == 'show_match':
+        if not params or 'match_id' not in params:
+            return "Формат: покажи мач [match_id]"
+        m = matches.get_match(params['match_id'])
+        if not m:
+            return "Мачът не е намерен."
+        return f"{m['match_date']}: {m['home_name']} {m['home_goals']}-{m['away_goals']} {m['away_name']}"
+
+    if intent == 'record_event':
+        if not params or 'match_id' not in params or 'event_type' not in params:
+            return "Недостатъчни параметри. Формат: запиши събитие [event_type] [player_identifier] в мач [match_id] минута [minute]"
+        return matches.record_event(
+            params.get('match_id'),
+            params.get('player_identifier'),
+            params.get('event_type'),
+            params.get('minute')
+        )
+
+    if intent == 'get_standings':
+        if not params or 'league_identifier' not in params:
+            return "Формат: покажи класиране [league_identifier]"
+        return matches.get_league_standings(params['league_identifier'])
 
     return "Не разбирам командата. Напишете 'помощ'."
