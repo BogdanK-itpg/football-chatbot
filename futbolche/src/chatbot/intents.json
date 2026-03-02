@@ -1,0 +1,131 @@
+{
+  "intents": [
+    {
+      "tag": "help",
+      "patterns": ["помощ", "help", "какво можеш", "команди"],
+      "responses": ["Налични команди:"],
+      "examples": ["помощ"]
+    },
+    {
+      "tag": "exit",
+      "patterns": ["изход", "exit", "край", "довиждане"],
+      "responses": ["До скоро!"],
+      "examples": ["изход"]
+    },
+    {
+      "tag": "add_club",
+      "patterns": [
+        "добави клуб [club_name]",
+        "създай клуб [club_name]",
+        "нов клуб [club_name]",
+        "добави нов клуб [club_name]"
+      ],
+      "responses": ["Клубът беше добавен успешно."],
+      "examples": ["добави клуб [club_name]"]
+    },
+    {
+      "tag": "list_clubs",
+      "patterns": ["покажи всички клубове", "покажи клубове", "списък с клубове"],
+      "responses": ["Ето списък с всички клубове:"],
+      "examples": ["покажи всички клубове"]
+    },
+    {
+      "tag": "delete_club",
+      "patterns": ["изтрий клуб [club_name]", "изтрий [club_name]", "премахни клуб [club_name]"],
+      "responses": ["Клубът беше изтрит."],
+      "examples": ["изтрий клуб [club_name]"]
+    },
+    {
+      "tag": "update_club",
+      "patterns": ["редактирай клуб [club_name] на [new_name]", "промени клуб [club_name] на [new_name]"],
+      "responses": ["Клубът беше обновен."],
+      "examples": ["промени клуб [club_name] на [new_name]"]
+    },
+    {
+      "tag": "add_player",
+      "patterns": [
+        "добави играч [full_name] в клуб [club_identifier] позиция [position] номер [number] националност [nationality] дата на раждане [birth_date] статус [status]",
+        "добави играч [full_name] в [club_identifier]",
+        "регистрирай играч [full_name]",
+        "създай играч [full_name]"
+      ],
+      "responses": ["Играчът беше добавен успешно."],
+      "examples": [
+        "добави играч [full_name] в клуб [club_identifier] позиция [position] номер [number] националност [nationality] дата на раждане [birth_date] статус [status]"
+      ]
+    },
+    {
+      "tag": "list_players",
+      "patterns": [
+        "покажи играчи на клуб [club_identifier]",
+        "покажи играчи в клуб [club_identifier]",
+        "покажи играчи в [club_identifier]",
+        "списък с играчи на [club_identifier]",
+        "покажи играчи [club_identifier]",
+        "покажи всички играчи"
+      ],
+      "responses": ["Ето списък с играчи:"],
+      "examples": ["покажи играчи на клуб [club_identifier]"]
+    },
+    {
+      "tag": "list_all_players",
+      "patterns": ["покажи всички играчи", "всички играчи", "списък с всички играчи"],
+      "responses": ["Ето списък с всички играчи:"],
+      "examples": ["покажи всички играчи"]
+    },
+    {
+      "tag": "update_player_position",
+      "patterns": [
+        "смени позиция на [player_identifier] на [new_position]",
+        "промени позиция на [player_identifier] на [new_position]"
+      ],
+      "responses": ["Позицията е обновена."],
+      "examples": ["смени позиция на [player_identifier] на [new_position]"]
+    },
+    {
+      "tag": "update_player_number",
+      "patterns": [
+        "смени номер на [player_identifier] на [new_number]",
+        "промени номер на [player_identifier] на [new_number]"
+      ],
+      "responses": ["Номерът е обновен."],
+      "examples": ["смени номер на [player_identifier] на [new_number]"]
+    },
+    {
+      "tag": "update_player_status",
+      "patterns": [
+        "смени статус на [player_identifier] на [new_status]",
+        "промени статус на [player_identifier] на [new_status]"
+      ],
+      "responses": ["Статусът е обновен."],
+      "examples": ["смени статус на [player_identifier] на [new_status]"]
+    },
+    {
+      "tag": "delete_player",
+      "patterns": ["изтрий играч [player_identifier]", "премахни играч [player_identifier]"],
+      "responses": ["Играчът беше изтрит."],
+      "examples": ["изтрий играч [player_identifier]"]
+    },
+    {
+      "tag": "club_statistics",
+      "patterns": [
+        "покажи статистика на клуб [club_identifier]",
+        "статистика на клуб [club_identifier]",
+        "класиране на [club_identifier]",
+        "къде е клуб [club_identifier]"
+      ],
+      "responses": ["Ето статистиката за клуба:"],
+      "examples": ["покажи статистика на клуб [club_identifier]"]
+    },
+    {
+      "tag": "player_statistics",
+      "patterns": [
+        "покажи статистика на играч [player_identifier]",
+        "статистика на играч [player_identifier]",
+        "покажи статистика [player_identifier]"
+      ],
+      "responses": ["Ето статистиката за играча:"],
+      "examples": ["покажи статистика на играч [player_identifier]"]
+    }
+  ]
+}
