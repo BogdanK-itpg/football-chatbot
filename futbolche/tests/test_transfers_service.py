@@ -11,8 +11,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 sys.path.insert(0, os.path.dirname(__file__))
 
 from test_config import test_config, create_test_clubs, create_test_players
-from db import execute_query
-from services.transfers_service import transfer_player
+from src.db import execute_query
+from src.services.transfers_service import transfer_player
 
 
 class TestTransfersService(unittest.TestCase):

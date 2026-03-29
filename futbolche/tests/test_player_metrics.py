@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 sys.path.insert(0, os.path.dirname(__file__))
 
 from test_config import test_config
-from services.statistics_service import get_player_advanced_metrics, get_player_statistics
+from src.services.statistics_service import get_player_advanced_metrics, get_player_statistics
 
 class TestPlayerMetrics(unittest.TestCase):
     def setUp(self):

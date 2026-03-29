@@ -19,14 +19,14 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 sys.path.insert(0, os.path.dirname(__file__))
 
 from test_config import test_config
-from chatbot.chatbot import parse_and_handle, parse_input_wrapper
-from services.clubs_service import create_club, list_clubs, delete_club, update_club
-from services.players_service import add_player, get_players_by_club, update_player_position, update_player_number, update_player_status, delete_player, get_club_id
-from services.matches_service import record_match, get_match, record_event, get_league_standings, get_match_events
-from services.leagues_service import create_league, add_club_to_league, generate_round_robin, get_fixtures, get_league_teams
-from services.statistics_service import get_club_statistics, get_player_statistics, get_player_advanced_metrics
-from services.transfers_service import transfer_player
-from db import execute_query
+from src.chatbot.chatbot import parse_and_handle, parse_input_wrapper
+from src.services.clubs_service import create_club, list_clubs, delete_club, update_club
+from src.services.players_service import add_player, get_players_by_club, update_player_position, update_player_number, update_player_status, delete_player, get_club_id
+from src.services.matches_service import record_match, get_match, record_event, get_league_standings, get_match_events
+from src.services.leagues_service import create_league, add_club_to_league, generate_round_robin, get_fixtures, get_league_teams
+from src.services.statistics_service import get_club_statistics, get_player_statistics, get_player_advanced_metrics
+from src.services.transfers_service import transfer_player
+from src.db import execute_query
 
 
 class TestAllIntentsIntegration(unittest.TestCase):

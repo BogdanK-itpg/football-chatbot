@@ -3,7 +3,7 @@
 
 import sys
 sys.path.insert(0, 'src')
-from chatbot.nlu import parse_input
+from src.chatbot.nlu import parse_input
 
 tests = [
     ("помощ", "help"),

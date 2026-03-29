@@ -10,8 +10,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 sys.path.insert(0, os.path.dirname(__file__))
 
 from test_config import test_config
-from services.statistics_service import get_club_statistics, get_player_statistics
-from db import execute_query
+from src.services.statistics_service import get_club_statistics, get_player_statistics
+from src.db import execute_query
 
 
 class TestStatisticsService(unittest.TestCase):
