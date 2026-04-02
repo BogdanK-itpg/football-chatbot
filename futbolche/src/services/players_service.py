@@ -65,9 +65,17 @@ def get_club_id(club_identifier):
 def get_player_id(player_identifier):
     if not player_identifier:
         return None
-    row = fetch_one("SELECT id FROM players WHERE LOWER(full_name) = LOWER(?)", (player_identifier,))
+    
+    player_lower = player_identifier.lower()
+    row = fetch_one("SELECT id, full_name FROM players")
     if row:
-        return row['id']
+        if row['full_name'].lower() == player_lower:
+            return row['id']
+    
+    all_players = fetch_all("SELECT id, full_name FROM players")
+    for row in all_players:
+        if player_lower in row['full_name'].lower():
+            return row['id']
 
     try:
         pid = int(player_identifier)
@@ -131,12 +139,29 @@ def get_players_by_club(club_identifier=None):
     if not rows:
         return "Няма намерени играчи."
 
-    out = []
-    for r in rows:
-        out.append(
-            f"ID: {r['id']} | {r['full_name']} | {r['club_name']} | {r['position']} | #{r['number']} | {r['nationality']} | {r['birth_date']} | {r['status']}"
+    headers = ["ID", "Име", "Клуб", "Поз", "№", "Националност", "Р. Дата", "Статус"]
+    col_widths = [4, 22, 24, 5, 4, 15, 12, 10]
+
+    def format_row(row):
+        return (
+            f"{str(row['id']):<{col_widths[0]}}"
+            f"{row['full_name']:<{col_widths[1]}}"
+            f"{row['club_name']:<{col_widths[2]}}"
+            f"{row['position']:<{col_widths[3]}}"
+            f"{str(row['number']):<{col_widths[4]}}"
+            f"{row['nationality']:<{col_widths[5]}}"
+            f"{str(row['birth_date']):<{col_widths[6]}}"
+            f"{row['status']:<{col_widths[7]}}"
         )
-    return "\n".join(out)
+
+    header = "".join(h.ljust(w) for h, w in zip(headers, col_widths))
+    separator = "-" * sum(col_widths)
+
+    lines = [header, separator]
+    for r in rows:
+        lines.append(format_row(r))
+
+    return "\n".join(lines)
 
 
 def update_player_position(player_identifier, new_position):

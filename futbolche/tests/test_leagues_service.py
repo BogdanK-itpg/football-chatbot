@@ -10,8 +10,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 sys.path.insert(0, os.path.dirname(__file__))
 
 from test_config import test_config, create_test_clubs
-from src.services.leagues_service import create_league, add_club_to_league, generate_round_robin, get_fixtures
-from src.db import execute_query
+from services.leagues_service import create_league, add_club_to_league, generate_round_robin, get_fixtures
+from db import execute_query
 
 
 class TestLeaguesService(unittest.TestCase):

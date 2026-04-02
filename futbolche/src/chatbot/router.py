@@ -4,6 +4,16 @@ import services.players_service as players
 import services.matches_service as matches
 from .nlu import _load_intents
 import services.statistics_service as stats
+import services.transfers_service as transfers
+
+
+CATEGORIES = {
+    "Клубове": ["add_club", "list_clubs", "update_club", "delete_club"],
+    "Играчи": ["add_player", "list_players", "list_all_players", "update_player_position", "update_player_number", "update_player_status", "delete_player", "transfer_player"],
+    "Статистика": ["club_statistics", "player_statistics", "player_metrics"],
+    "Мачове": ["record_match", "show_match", "record_event", "get_fixtures"],
+    "Лиги": ["create_league", "add_club_to_league", "get_league_teams", "generate_round_robin", "get_standings"],
+}
 
 
 def handle_intent(intent: str, params: Optional[Dict[str, str]]) -> str:
@@ -11,13 +21,26 @@ def handle_intent(intent: str, params: Optional[Dict[str, str]]) -> str:
     if intent == 'help':
         help_lines = ["Налични команди:"]
         intents = _load_intents()
-        for intent_data in intents:
-            tag = intent_data.get('tag')
-            if not tag or tag == 'unknown':
-                continue
-            patterns = intent_data.get('examples', [])
-            for p in patterns:
-                help_lines.append(f"- {p}")
+        intent_tags = {i.get('tag') for i in intents if i.get('tag')}
+
+        for category, tags in CATEGORIES.items():
+            cmds = []
+            for tag in tags:
+                if tag in intent_tags:
+                    for i in intents:
+                        if i.get('tag') == tag:
+                            examples = i.get('examples', [])
+                            if examples:
+                                cmds.append(f"- {examples[0]}")
+                            break
+            if cmds:
+                help_lines.append(f"\n{category}:")
+                help_lines.extend(cmds)
+
+        help_lines.append("\n\nДруги:")
+        help_lines.append("- изход (затвори чатбота)")
+        help_lines.append("- помощ (покажи тази помощ)")
+
         return "\n".join(help_lines)
 
     if intent == 'exit':
@@ -161,5 +184,10 @@ def handle_intent(intent: str, params: Optional[Dict[str, str]]) -> str:
         if not params or 'league_identifier' not in params:
             return "Формат: покажи класиране [league_identifier]"
         return matches.get_league_standings(params['league_identifier'])
+
+    if intent == 'transfer_player':
+        if not params or 'player_identifier' not in params or 'club_identifier' not in params:
+            return "Недостатъчни параметри. Формат: трансферирай играч [player_identifier] в клуб [club_identifier]"
+        return transfers.transfer_player(params['player_identifier'], params['club_identifier'])
 
     return "Не разбирам командата. Напишете 'помощ'."

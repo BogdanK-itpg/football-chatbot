@@ -10,10 +10,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 sys.path.insert(0, os.path.dirname(__file__))
 
 from test_config import test_config
-from src.services import matches_service as matches
-from src.services import leagues_service as leagues
-from src.services import players_service as players
-from src.db import fetch_one, fetch_all
+from services import matches_service as matches
+from services import leagues_service as leagues
+from services import players_service as players
+from db import fetch_one, fetch_all
 
 
 class TestMatchesEvents(unittest.TestCase):

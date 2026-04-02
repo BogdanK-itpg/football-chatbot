@@ -23,7 +23,7 @@ class TestConfig:
     def setup_test_environment(self):
         """Setup test environment with temporary database"""
         # Store original paths
-        import src.db as real_db
+        import db as real_db
 
         # Store original paths
         self.original_db_path = real_db.DB_PATH
@@ -45,7 +45,7 @@ class TestConfig:
     def cleanup_test_environment(self):
         """Cleanup test environment"""
         try:
-            import src.db as real_db
+            import db as real_db
             # restore original paths
             if self.original_db_path is not None:
                 real_db.DB_PATH = self.original_db_path
@@ -69,7 +69,7 @@ def teardown_function():
 
 def create_test_clubs():
     """Create test clubs for testing"""
-    from src.services.clubs_service import create_club
+    from services.clubs_service import create_club
     clubs = [
         "Левски София",
         "ЦСКА София", 
@@ -88,8 +88,8 @@ def create_test_clubs():
 
 def create_test_players():
     """Create test players for testing"""
-    from src.services.players_service import add_player
-    from src.db import execute_query
+    from services.players_service import add_player
+    from db import execute_query
     
     # Get club IDs
     clubs = execute_query("SELECT id, name FROM clubs", fetch=True)

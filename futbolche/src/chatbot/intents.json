@@ -144,11 +144,15 @@
       "tag": "transfer_player",
       "patterns": [
         "трансферирай играч [player_identifier] в клуб [club_identifier]",
+        "трансферирай играч [player_identifier] в [club_identifier]",
+        "премести играч [player_identifier] в клуб [club_identifier]",
+        "премести играч [player_identifier] в [club_identifier]",
+        "прехвърли играч [player_identifier] в клуб [club_identifier]",
         "прехвърли играч [player_identifier] в [club_identifier]",
         "трансфер [player_identifier] -> [club_identifier]"
       ],
       "responses": ["Играчът беше трансфериран."],
-      "examples": ["трансферирай играч [player_identifier] в клуб [club_identifier]"]
+      "examples": ["трансферирай играч [player_identifier] в клуб [club_identifier]", "премести играч [player_identifier] в [club_identifier]"]
     },
     {
       "tag": "record_match",

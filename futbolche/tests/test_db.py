@@ -15,8 +15,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 # Ensure tests directory is on path so test helpers (test_config) can be imported
 sys.path.insert(0, os.path.dirname(__file__))
 
-import src.db
-from src.db import initialize_database, get_connection, execute_query
+import db
+from db import initialize_database, get_connection, execute_query
 
 
 class TestDatabaseOperations(unittest.TestCase):
@@ -34,8 +34,8 @@ class TestDatabaseOperations(unittest.TestCase):
     def test_initialize_database_creates_new_database(self):
         """Test that initialize_database creates a new database file"""
         # Ensure database doesn't exist
-        if os.path.exists(src.db.DB_PATH):
-            os.remove(src.db.DB_PATH)
+        if os.path.exists(db.DB_PATH):
+            os.remove(db.DB_PATH)
         
         # Initialize database
         initialize_database()

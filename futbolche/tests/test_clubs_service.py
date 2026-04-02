@@ -13,8 +13,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 # Ensure tests directory is on path so test helpers (test_config) can be imported
 sys.path.insert(0, os.path.dirname(__file__))
 
-from src.services.clubs_service import create_club, list_clubs, delete_club
-from src.db import execute_query
+from services.clubs_service import create_club, list_clubs, delete_club
+from db import execute_query
 
 
 class TestClubsService(unittest.TestCase):
@@ -25,7 +25,7 @@ class TestClubsService(unittest.TestCase):
         self.test_config = __import__('test_config').test_config
         self.test_config.setup_test_environment()
         # Ensure a clean clubs table for this test case so we control inserts
-        from src.db import execute_query
+        from db import execute_query
         execute_query("DELETE FROM clubs", fetch=False)
         
         # Create test clubs
@@ -175,7 +175,7 @@ class TestClubsService(unittest.TestCase):
         club_id = club[0]['id']
         
         # Add a player to the club
-        from src.services.players_service import add_player
+        from services.players_service import add_player
         add_player(club_id, "Тестов Играч", "1990-01-01", "България", "GK", 1, "Активен")
         
         # Verify player exists
@@ -251,7 +251,7 @@ class TestClubsService(unittest.TestCase):
     def test_delete_club_database_error(self, mock_execute):
         """Test handling of database errors during club deletion"""
         # Ensure the club exists so deletion will attempt to execute (insert directly)
-        from src.db import execute_query
+        from db import execute_query
         execute_query("INSERT INTO clubs (name, city, founded_year) VALUES (?, ?, ?)", ("Test Club", "Unknown", 1900), fetch=False)
         # Mock execute to raise an exception
         mock_execute.side_effect = Exception("Database error")
