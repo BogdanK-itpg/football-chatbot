@@ -25,14 +25,18 @@ def add_club_to_league(league_identifier, club_identifier):
     if not lid:
         return "Лигата не съществува."
 
-    # resolve club id
+    # resolve club id - use Python's lower() for case-insensitive search
     cid = None
     if isinstance(club_identifier, int) or str(club_identifier).isdigit():
         cid = int(club_identifier)
     else:
-        row = fetch_one("SELECT id FROM clubs WHERE LOWER(name)=LOWER(?)", (club_identifier,))
-        if row:
-            cid = row['id']
+        # Get all clubs and match in Python (handles Cyrillic case-insensitive)
+        all_clubs = fetch_all("SELECT id, name FROM clubs")
+        club_lower = club_identifier.lower()
+        for c in all_clubs:
+            if c['name'].lower() == club_lower or club_lower in c['name'].lower():
+                cid = c['id']
+                break
 
     if not cid:
         return "Клубът не съществува."

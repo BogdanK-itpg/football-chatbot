@@ -13,6 +13,12 @@
       "examples": ["изход"]
     },
     {
+      "tag": "add_club_to_league",
+      "patterns": ["добави клуб [club_identifier] в лига [league_identifier]", "включи [club_identifier] в [league_identifier]"],
+      "responses": ["Клубът беше добавен в лигата."],
+      "examples": ["добави клуб [club_identifier] в лига [league_identifier]"]
+    },
+    {
       "tag": "add_club",
       "patterns": [
         "добави клуб [club_name]",
@@ -172,15 +178,9 @@
     },
     {
       "tag": "create_league",
-      "patterns": ["създай лига [league_name] сезон [season]", "добави лига [league_name] [season]"],
+      "patterns": ["създай лига [league_name] за сезон [season]", "добави лига [league_name] за сезон [season]", "създай лига [league_name] сезон [season]", "нова лига [league_name] сезон [season]"],
       "responses": ["Лигата беше създадена."],
-      "examples": ["създай лига [league_name] сезон [season]"]
-    },
-    {
-      "tag": "add_club_to_league",
-      "patterns": ["добави клуб [club_identifier] в лига [league_identifier]", "включи [club_identifier] в [league_identifier]"],
-      "responses": ["Клубът беше добавен в лигата."],
-      "examples": ["добави клуб [club_identifier] в лига [league_identifier]"]
+      "examples": ["създай лига [league_name] за сезон [season]", "създай лига [league_name] сезон [season]"]
     },
     {
       "tag": "get_league_teams",

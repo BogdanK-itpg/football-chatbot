@@ -5,6 +5,7 @@ import services.matches_service as matches
 from .nlu import _load_intents
 import services.statistics_service as stats
 import services.transfers_service as transfers
+import services.leagues_service as leagues
 
 
 CATEGORIES = {
@@ -12,7 +13,7 @@ CATEGORIES = {
     "Играчи": ["add_player", "list_players", "list_all_players", "update_player_position", "update_player_number", "update_player_status", "delete_player", "transfer_player"],
     "Статистика": ["club_statistics", "player_statistics", "player_metrics"],
     "Мачове": ["record_match", "show_match", "record_event", "get_fixtures"],
-    "Лиги": ["create_league", "add_club_to_league", "get_league_teams", "generate_round_robin", "get_standings"],
+    "Лиги": ["create_league", "add_club_to_league", "get_league_teams", "generate_round_robin", "get_standings", "get_fixtures"],
 }
 
 
@@ -68,6 +69,35 @@ def handle_intent(intent: str, params: Optional[Dict[str, str]]) -> str:
         if not old or not new:
             return "Формат: редактирай клуб [старо име] на [ново име]"
         return update_club(old, new_name=new)
+
+    # --- Leagues ---
+    if intent == 'create_league':
+        if not params or 'league_name' not in params or 'season' not in params:
+            return "Недостатъчни параметри. Формат: създай лига [име] сезон [година]"
+        return leagues.create_league(params['league_name'], params['season'])
+
+    if intent == 'add_club_to_league':
+        if not params or 'club_identifier' not in params or 'league_identifier' not in params:
+            return "Недостатъчни параметри. Формат: добави клуб [клуб] в лига [лига]"
+        return leagues.add_club_to_league(params['league_identifier'], params['club_identifier'])
+
+    if intent == 'get_league_teams':
+        if not params or 'league_identifier' not in params:
+            return "Формат: покажи отбори в лига [лига]"
+        teams = leagues.get_league_teams(params['league_identifier'])
+        if not teams:
+            return "Лигата не съществува или няма отбори."
+        return "\n".join(f"- {t['name']}" for t in teams)
+
+    if intent == 'generate_round_robin':
+        if not params or 'league_identifier' not in params:
+            return "Формат: генерирай кръгове за лига [лига]"
+        return leagues.generate_round_robin(params['league_identifier'])
+
+    if intent == 'get_fixtures':
+        if not params or 'league_identifier' not in params:
+            return "Формат: покажи мачове [лига]"
+        return leagues.get_fixtures(params['league_identifier'])
 
     # --- Players ---
     if intent == 'add_player':
