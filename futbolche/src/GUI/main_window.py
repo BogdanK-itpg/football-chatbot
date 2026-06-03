@@ -140,9 +140,16 @@ class FootballChatbotGUI:
                 return
 
             self._add_message("Bot", response)
-            log_command(user_input, response)
+
+            status = "OK"
+            reason = ""
+            error_keywords = ["грешка", "не съществува", "невалид", "няма", "не може", "вече", "изтрит"]
+            if any(kw in response.lower() for kw in error_keywords):
+                status = "ERROR" if any(kw in response.lower() for kw in ["грешка", "не съществува", "невалид"]) else "OK"
+            log_command(user_input, intent, status, reason)
         except Exception as e:
             self._add_message("Bot", f"Грешка: {str(e)}")
+            log_command(user_input, "unknown", "ERROR", str(e))
 
     def _add_message(self, sender, message):
         self.chat_display.config(state=tk.NORMAL)

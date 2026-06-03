@@ -32,13 +32,14 @@ CREATE TABLE matches (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     home_team_id INTEGER NOT NULL,
     away_team_id INTEGER NOT NULL,
-    home_goals INTEGER NOT NULL DEFAULT 0,
-    away_goals INTEGER NOT NULL DEFAULT 0,
+    home_goals INTEGER DEFAULT NULL,
+    away_goals INTEGER DEFAULT NULL,
     match_date TEXT NOT NULL,
     league_id INTEGER,
+    round_no INTEGER DEFAULT NULL,
+    is_played INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (home_team_id) REFERENCES clubs(id) ON DELETE CASCADE,
-    FOREIGN KEY (away_team_id) REFERENCES clubs(id) ON DELETE CASCADE
-    ,
+    FOREIGN KEY (away_team_id) REFERENCES clubs(id) ON DELETE CASCADE,
     FOREIGN KEY (league_id) REFERENCES leagues(id) ON DELETE CASCADE
 );
 
@@ -64,14 +65,19 @@ CREATE TABLE league_teams (
 );
 
 -- =====================================
--- TABLE: events (match events, player stats)
+-- TABLE: events (match events)
 -- =====================================
 CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     match_id INTEGER NOT NULL,
     player_id INTEGER,
+    club_id INTEGER,
     event_type TEXT NOT NULL CHECK(event_type IN ('goal','assist','yellow','red','appearance')),
+    card_type TEXT DEFAULT NULL CHECK(card_type IS NULL OR card_type IN ('Y','R')),
     minute INTEGER,
+    is_own_goal INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (match_id) REFERENCES matches(id) ON DELETE CASCADE,
-    FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE SET NULL
+    FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE SET NULL,
+    FOREIGN KEY (club_id) REFERENCES clubs(id) ON DELETE SET NULL
 );

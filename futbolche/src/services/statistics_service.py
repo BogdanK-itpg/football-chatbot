@@ -1,45 +1,41 @@
-from db import fetch_one, fetch_all, fetch_all as fetchAll, fetch_one as fetchOne
-
-
-def _resolve_club_id(identifier):
-    # identifier may be int or name
-    if isinstance(identifier, int) or (isinstance(identifier, str) and identifier.isdigit()):
-        return int(identifier)
-    row = fetch_one("SELECT id FROM clubs WHERE LOWER(name) = LOWER(?)", (str(identifier),))
-    if row:
-        return row['id']
-    # try contains
-    rows = fetch_all("SELECT id, name FROM clubs")
-    for r in rows:
-        if str(identifier).casefold() in r['name'].casefold():
-            return r['id']
-    return None
+from repositories import clubs_repo, players_repo, matches_repo, events_repo
 
 
 def get_club_statistics(identifier):
-    """Return aggregated statistics for a club: matches, wins, draws, losses, goals for/against, points."""
     cid = _resolve_club_id(identifier)
     if not cid:
         return None
+    all_matches = matches_repo.get_by_league(None) or []
+    all_matches += [m for m in (matches_repo.get_all() or []) if m not in all_matches]
 
-    played_q = "SELECT COUNT(*) as cnt FROM matches WHERE home_team_id = ? OR away_team_id = ?"
-    played = fetch_one(played_q, (cid, cid))['cnt'] or 0
+    # Filter matches involving this club
+    club_matches = [
+        m for m in (matches_repo.get_all() or [])
+        if (m['home_team_id'] == cid or m['away_team_id'] == cid)
+        and m['home_goals'] is not None and m['away_goals'] is not None
+    ]
 
-    wins_home = fetch_one("SELECT COUNT(*) as cnt FROM matches WHERE home_team_id = ? AND home_goals > away_goals", (cid,))['cnt'] or 0
-    wins_away = fetch_one("SELECT COUNT(*) as cnt FROM matches WHERE away_team_id = ? AND away_goals > home_goals", (cid,))['cnt'] or 0
-    wins = wins_home + wins_away
+    played = len(club_matches)
+    wins = 0
+    draws = 0
+    goals_for = 0
+    goals_against = 0
 
-    draws = fetch_one("SELECT COUNT(*) as cnt FROM matches WHERE (home_team_id = ? OR away_team_id = ?) AND home_goals = away_goals", (cid, cid))['cnt'] or 0
-    losses = (played - wins - draws) if played is not None else 0
+    for m in club_matches:
+        if m['home_team_id'] == cid:
+            gf = m['home_goals']
+            ga = m['away_goals']
+        else:
+            gf = m['away_goals']
+            ga = m['home_goals']
+        goals_for += gf
+        goals_against += ga
+        if gf > ga:
+            wins += 1
+        elif gf == ga:
+            draws += 1
 
-    gf_home = fetch_one("SELECT COALESCE(SUM(home_goals),0) as s FROM matches WHERE home_team_id = ?", (cid,))['s'] or 0
-    gf_away = fetch_one("SELECT COALESCE(SUM(away_goals),0) as s FROM matches WHERE away_team_id = ?", (cid,))['s'] or 0
-    goals_for = gf_home + gf_away
-
-    ga_home = fetch_one("SELECT COALESCE(SUM(away_goals),0) as s FROM matches WHERE home_team_id = ?", (cid,))['s'] or 0
-    ga_away = fetch_one("SELECT COALESCE(SUM(home_goals),0) as s FROM matches WHERE away_team_id = ?", (cid,))['s'] or 0
-    goals_against = ga_home + ga_away
-
+    losses = played - wins - draws
     goal_diff = goals_for - goals_against
     points = wins * 3 + draws
 
@@ -56,29 +52,16 @@ def get_club_statistics(identifier):
     }
 
 
-def _resolve_player_id(identifier):
-    if isinstance(identifier, int) or (isinstance(identifier, str) and identifier.isdigit()):
-        return int(identifier)
-    row = fetch_one("SELECT id FROM players WHERE LOWER(full_name) = LOWER(?)", (str(identifier),))
-    if row:
-        return row['id']
-    rows = fetch_all("SELECT id, full_name FROM players")
-    for r in rows:
-        if str(identifier).casefold() in r['full_name'].casefold():
-            return r['id']
-    return None
-
-
 def get_player_statistics(identifier):
     pid = _resolve_player_id(identifier)
     if not pid:
         return None
 
-    goals = fetch_one("SELECT COUNT(*) as cnt FROM events WHERE player_id = ? AND event_type = 'goal'", (pid,))['cnt'] or 0
-    assists = fetch_one("SELECT COUNT(*) as cnt FROM events WHERE player_id = ? AND event_type = 'assist'", (pid,))['cnt'] or 0
-    yellows = fetch_one("SELECT COUNT(*) as cnt FROM events WHERE player_id = ? AND event_type = 'yellow'", (pid,))['cnt'] or 0
-    reds = fetch_one("SELECT COUNT(*) as cnt FROM events WHERE player_id = ? AND event_type = 'red'", (pid,))['cnt'] or 0
-    appearances = fetch_one("SELECT COUNT(*) as cnt FROM events WHERE player_id = ? AND event_type = 'appearance'", (pid,))['cnt'] or 0
+    goals = events_repo.count_by_player(pid, 'goal')
+    assists = events_repo.count_by_player(pid, 'assist')
+    yellows = events_repo.count_by_player(pid, 'yellow')
+    reds = events_repo.count_by_player(pid, 'red')
+    appearances = events_repo.count_by_player(pid, 'appearance')
 
     return {
         'player_id': pid,
@@ -91,28 +74,44 @@ def get_player_statistics(identifier):
 
 
 def get_player_advanced_metrics(identifier):
-    """Compute advanced per-90 metrics for a player: minutes played (approx), goals/90, assists/90."""
     stats = get_player_statistics(identifier)
     if not stats:
         return None
-
-    # Approximate minutes played as appearances * 90 (best-effort when no minutes data available)
     appearances = stats.get('appearances', 0) or 0
     minutes_played = appearances * 90
-
     goals = stats.get('goals', 0) or 0
     assists = stats.get('assists', 0) or 0
-
     if minutes_played > 0:
         goals_per_90 = round((goals * 90) / minutes_played, 2)
         assists_per_90 = round((assists * 90) / minutes_played, 2)
     else:
         goals_per_90 = 0.0
         assists_per_90 = 0.0
-
     return {
         'player_id': stats['player_id'],
         'minutes_played': minutes_played,
         'goals_per_90': goals_per_90,
         'assists_per_90': assists_per_90
     }
+
+
+def _resolve_club_id(identifier):
+    if not identifier:
+        return None
+    if str(identifier).isdigit():
+        club = clubs_repo.get_by_id(int(identifier))
+        if club:
+            return club['id']
+    club = clubs_repo.get_by_name(identifier)
+    return club['id'] if club else None
+
+
+def _resolve_player_id(identifier):
+    if not identifier:
+        return None
+    if str(identifier).isdigit():
+        p = players_repo.get_by_id(int(identifier))
+        if p:
+            return p['id']
+    p = players_repo.get_by_name(identifier)
+    return p['id'] if p else None

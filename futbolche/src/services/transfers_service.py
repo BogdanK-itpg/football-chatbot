@@ -1,18 +1,25 @@
+from repositories import players_repo, clubs_repo
 from db import connect, commit, rollback
-from services.players_service import get_player_id, get_club_id
 from utils.logger import log_command
 
 
 def transfer_player(player_identifier, to_club_identifier):
-    """Transfer a player to another club inside a DB transaction.
-
-    Returns a success message or an error message string on failure.
-    """
-    pid = get_player_id(player_identifier)
+    pid = players_repo.get_by_name(player_identifier) if not str(player_identifier).isdigit() else players_repo.get_by_id(int(player_identifier))
+    if not pid:
+        pid = players_repo.get_by_id(int(player_identifier)) if str(player_identifier).isdigit() else players_repo.get_by_name(player_identifier)
     if not pid:
         return f"Играч '{player_identifier}' не съществува."
+    pid = pid['id']
 
-    to_cid = get_club_id(to_club_identifier)
+    to_cid = None
+    if str(to_club_identifier).isdigit():
+        club = clubs_repo.get_by_id(int(to_club_identifier))
+        if club:
+            to_cid = club['id']
+    else:
+        club = clubs_repo.get_by_name(to_club_identifier)
+        if club:
+            to_cid = club['id']
     if not to_cid:
         return f"Клуб '{to_club_identifier}' не съществува."
 
@@ -21,32 +28,22 @@ def transfer_player(player_identifier, to_club_identifier):
         return "Грешка при свързване с базата данни."
 
     try:
-        cur = conn.cursor()
-
-        # fetch current player info inside the transaction
-        cur.execute("SELECT club_id, number, full_name FROM players WHERE id = ?", (pid,))
-        p = cur.fetchone()
+        p = players_repo.get_club_and_number(pid)
         if not p:
             return f"Играч '{player_identifier}' не съществува."
-
         if p['club_id'] == to_cid:
             return "Играчът вече е в този клуб."
 
-        # check if jersey number is taken in target club
-        cur.execute("SELECT id FROM players WHERE club_id = ? AND number = ? AND id != ?", (to_cid, p['number'], pid))
-        conflict = cur.fetchone()
+        conflict = players_repo.check_number_conflict(to_cid, p['number'], pid)
         assigned_number = p['number']
         if conflict:
-            # find smallest available number in target club
-            cur.execute("SELECT number FROM players WHERE club_id = ? ORDER BY number", (to_cid,))
-            used = {r['number'] for r in cur.fetchall()}
+            used = players_repo.get_used_numbers(to_cid)
             for n in range(1, 100):
                 if n not in used:
                     assigned_number = n
                     break
 
-        # perform transfer (and possibly assign new number)
-        cur.execute("UPDATE players SET club_id = ?, number = ? WHERE id = ?", (to_cid, assigned_number, pid))
+        players_repo.update_club_and_number(pid, to_cid, assigned_number)
         commit(conn)
 
         if assigned_number != p['number']:
@@ -57,7 +54,6 @@ def transfer_player(player_identifier, to_club_identifier):
             log_command(f"transfer {player_identifier} -> {to_club_identifier}", result)
         except Exception:
             pass
-
         return result
 
     except Exception:

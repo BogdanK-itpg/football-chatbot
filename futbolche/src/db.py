@@ -2,36 +2,66 @@ import os
 import sqlite3
 from sqlite3 import Error
 
-# Get the directory where this db.py file is located
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "..", "sql", "football.db")
 SCHEMA_PATH = os.path.join(BASE_DIR, "..", "sql", "schema.sql")
+MIGRATION_PATH = os.path.join(BASE_DIR, "..", "sql", "migration.sql")
+
+MIGRATION_FLAG_TABLE = "_migration_done"
 
 def initialize_database():
-    """Create tables if they don't exist and populate with sample data"""
+    """Create tables if they don't exist and populate with sample data."""
     db_exists = os.path.exists(DB_PATH)
-    
+
     if not db_exists:
         print(f"[DB] Creating new database at {DB_PATH}")
-    else:
-        # Check if tables exist
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='clubs'")
-        if cursor.fetchone():
-            conn.close()
-            return  # Database already initialized
-        conn.close()
 
-    # Read schema and create tables
+        with open(SCHEMA_PATH, 'r', encoding='utf-8') as f:
+            cursor.executescript(f.read())
+
+        _insert_sample_data(conn, cursor)
+        conn.commit()
+        conn.close()
+        print("[DB] Database initialized successfully with sample data")
+        return
+
+    # Database exists — run migration if not already done
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    
-    with open(SCHEMA_PATH, 'r', encoding='utf-8') as f:
-        schema_sql = f.read()
-        cursor.executescript(schema_sql)
-    
-    # Insert sample clubs data
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (MIGRATION_FLAG_TABLE,))
+    if not cursor.fetchone():
+        print("[DB] Running schema migration...")
+        _run_migration(conn, cursor)
+        print("[DB] Migration complete.")
+    conn.close()
+
+
+def _run_migration(conn, cursor):
+    """Apply migration.sql to add new columns to existing tables."""
+    migration_path = MIGRATION_PATH
+    if os.path.exists(migration_path):
+        with open(migration_path, 'r', encoding='utf-8') as f:
+            sql = f.read()
+        # Execute statement by statement (executescript can fail on some ALTER quirks)
+        for statement in sql.split(';'):
+            stmt = statement.strip()
+            if stmt:
+                try:
+                    cursor.execute(stmt)
+                except Exception as e:
+                    # Column may already exist — ignore
+                    print(f"[DB] Migration note (safe to ignore): {e}")
+    # Mark migration as done
+    cursor.execute(f"CREATE TABLE IF NOT EXISTS {MIGRATION_FLAG_TABLE} (done INTEGER)")
+    cursor.execute(f"INSERT INTO {MIGRATION_FLAG_TABLE} (done) VALUES (1)")
+    conn.commit()
+
+
+def _insert_sample_data(conn, cursor):
+    """Populate new database with sample clubs, players, matches, and events."""
+
     sample_clubs = [
         ("Левски София", "София", 1914),
         ("ЦСКА София", "София", 1948),
@@ -44,154 +74,116 @@ def initialize_database():
     ]
     for club in sample_clubs:
         cursor.execute(
-            "INSERT INTO clubs (name, city, founded_year) VALUES (?, ?, ?)",
-            club
+            "INSERT INTO clubs (name, city, founded_year) VALUES (?, ?, ?)", club
         )
 
-    # Insert sample players data
     sample_players = [
-        # Levski Sofia players
         (1, "Иван Иванов", "1995-03-15", "България", "GK", 1, "Активен"),
         (1, "Петър Петров", "1998-07-22", "България", "DF", 4, "Активен"),
         (1, "Мария Георгиева", "1997-11-08", "България", "MF", 10, "Активен"),
         (1, "Александър Николов", "1996-01-30", "България", "FW", 9, "Активен"),
         (1, "Николай Костов", "1999-09-18", "България", "DF", 2, "Активен"),
-        
-        # CSKA Sofia players
         (2, "Георги Димитров", "1994-05-12", "България", "GK", 1, "Активен"),
         (2, "Димитър Иванов", "1997-12-25", "България", "MF", 8, "Активен"),
         (2, "Кристиян Стоянов", "1998-04-03", "България", "FW", 11, "Активен"),
         (2, "Васил Андреев", "1996-06-14", "България", "DF", 3, "Активен"),
         (2, "Радослав Недев", "1995-02-20", "България", "MF", 6, "Активен"),
-        
-        # Botev Plovdiv players
         (3, "Мартин Камиларов", "1996-02-14", "България", "GK", 1, "Активен"),
         (3, "Илия Илиев", "1995-08-20", "България", "DF", 5, "Активен"),
         (3, "Радослав Стоянов", "1999-10-11", "България", "MF", 7, "Активен"),
         (3, "Васил Лечков", "1997-06-06", "България", "FW", 9, "Активен"),
         (3, "Кирил Симов", "1998-03-12", "България", "DF", 2, "Активен"),
-        
-        # Ludogorets players
         (4, "Владислав Стоянов", "1995-01-18", "България", "GK", 1, "Активен"),
         (4, "Калоян Стоянов", "1998-03-25", "България", "DF", 2, "Активен"),
         (4, "Ивелин Попов", "1996-07-14", "България", "MF", 6, "Активен"),
         (4, "Клавдиу Кейсел", "1997-12-01", "Румъния", "FW", 10, "Активен"),
         (4, "Жуан Пауло", "1999-05-15", "Бразилия", "MF", 8, "Активен"),
-        
-        # Cherno More Varna players
         (5, "Димитър Манолов", "1994-11-22", "България", "GK", 1, "Активен"),
         (5, "Павел Виданов", "1998-01-15", "България", "DF", 4, "Активен"),
         (5, "Атанас Пиров", "1996-09-30", "България", "MF", 8, "Активен"),
         (5, "Иван Стоянов", "1999-05-05", "България", "FW", 11, "Активен"),
         (5, "Мартин Тодоров", "1997-04-22", "България", "DF", 3, "Активен"),
-        
-        # Spartak Varna players
         (6, "Георги Георгиев", "1995-08-10", "България", "GK", 1, "Активен"),
         (6, "Кристиян Камбулов", "1998-12-03", "България", "DF", 5, "Активен"),
         (6, "Александър Михалков", "1996-02-28", "България", "MF", 7, "Активен"),
         (6, "Борислав Димитров", "1999-07-19", "България", "FW", 10, "Активен"),
-        
-        # Lokomotiv Plovdiv players
         (7, "Иван Колев", "1994-06-25", "България", "GK", 1, "Активен"),
         (7, "Петър Стайков", "1997-11-14", "България", "DF", 4, "Активен"),
         (7, "Мартин Димитров", "1998-09-30", "България", "MF", 8, "Активен"),
         (7, "Николай Николов", "1996-01-08", "България", "FW", 9, "Активен"),
         (7, "Димитър Димитров", "1999-03-17", "България", "MF", 6, "Активен"),
-        
-        # Beroe Stara Zagora players
         (8, "Атанас Атанасов", "1995-10-12", "България", "GK", 1, "Активен"),
         (8, "Иван Иванов", "1998-07-23", "България", "DF", 3, "Активен"),
         (8, "Георги Попов", "1997-02-14", "България", "MF", 7, "Активен"),
         (8, "Кирил Кирилов", "1999-12-01", "България", "FW", 11, "Активен")
     ]
-    
     for player in sample_players:
         cursor.execute(
-            """INSERT INTO players (club_id, full_name, birth_date, nationality, position, number, status)
-               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            "INSERT INTO players (club_id, full_name, birth_date, nationality, position, number, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
             player
         )
-    
-    
-    conn.commit()
-    conn.close()
-    print("[DB] Database initialized successfully with sample data")
 
-    # Insert some sample matches and events to support statistics
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    # Sample matches: Levski(1) vs CSKA(2) 2-1, Levski(1) vs Botev(3) 0-0, CSKA(2) vs Botev(3) 1-3
-    cursor.execute("INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date) VALUES (?, ?, ?, ?, ?)", (1, 2, 2, 1, '2025-08-01'))
-    m1 = cursor.lastrowid
-    cursor.execute("INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date) VALUES (?, ?, ?, ?, ?)", (1, 3, 0, 0, '2025-08-08'))
-    m2 = cursor.lastrowid
-    cursor.execute("INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date) VALUES (?, ?, ?, ?, ?)", (2, 3, 1, 3, '2025-08-15'))
-    m3 = cursor.lastrowid
+    # Sample matches with is_played = 1 (all have scores)
+    sample_matches = [
+        (1, 2, 2, 1, '2025-08-01'),
+        (1, 3, 0, 0, '2025-08-08'),
+        (2, 3, 1, 3, '2025-08-15'),
+        (4, 5, 1, 2, '2025-08-02'),
+        (6, 7, 0, 1, '2025-08-03'),
+        (8, 7, 2, 2, '2025-08-04'),
+        (2, 4, 3, 1, '2025-08-05'),
+        (3, 5, 1, 1, '2025-08-06'),
+    ]
+    match_ids = []
+    for hm, aw, hg, ag, dt in sample_matches:
+        cursor.execute(
+            "INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date, is_played) VALUES (?, ?, ?, ?, ?, 1)",
+            (hm, aw, hg, ag, dt)
+        )
+        match_ids.append(cursor.lastrowid)
 
-    # Additional sample matches to flesh out the demo dataset
-    cursor.execute("INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date) VALUES (?, ?, ?, ?, ?)", (4, 5, 1, 2, '2025-08-02'))
-    m4 = cursor.lastrowid
-    cursor.execute("INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date) VALUES (?, ?, ?, ?, ?)", (6, 7, 0, 1, '2025-08-03'))
-    m5 = cursor.lastrowid
-    cursor.execute("INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date) VALUES (?, ?, ?, ?, ?)", (8, 7, 2, 2, '2025-08-04'))
-    m6 = cursor.lastrowid
-    cursor.execute("INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date) VALUES (?, ?, ?, ?, ?)", (2, 4, 3, 1, '2025-08-05'))
-    m7 = cursor.lastrowid
-    cursor.execute("INSERT INTO matches (home_team_id, away_team_id, home_goals, away_goals, match_date) VALUES (?, ?, ?, ?, ?)", (3, 5, 1, 1, '2025-08-06'))
-    m8 = cursor.lastrowid
+    # Sample events with club_id
+    def _get_player_id(full_name, club_id=None):
+        if club_id:
+            cursor.execute("SELECT id FROM players WHERE full_name = ? AND club_id = ?", (full_name, club_id))
+        else:
+            cursor.execute("SELECT id FROM players WHERE full_name = ?", (full_name,))
+        row = cursor.fetchone()
+        return row[0] if row else None
 
-    # Sample events: goals and assists for some players
-    # Player ids from sample data: Ivan Ivanov (Levski) id may be 1, but fetch dynamically
-    cursor.execute("SELECT id FROM players WHERE full_name = ?", ("Иван Иванов",))
-    row = cursor.fetchone()
-    if row:
-        pid_ivan = row[0]
-        cursor.execute("INSERT INTO events (match_id, player_id, event_type, minute) VALUES (?, ?, ?, ?)", (m1, pid_ivan, 'goal', 23))
-        cursor.execute("INSERT INTO events (match_id, player_id, event_type, minute) VALUES (?, ?, ?, ?)", (m2, pid_ivan, 'appearance', 0))
+    m1, m2, m3, m4, m5, m6, m7, m8 = match_ids
 
-    # Add a goal for a CSKA player
-    cursor.execute("SELECT id FROM players WHERE full_name = ?", ("Кристиян Стоянов",))
-    row = cursor.fetchone()
-    if row:
-        pid_krist = row[0]
-        cursor.execute("INSERT INTO events (match_id, player_id, event_type, minute) VALUES (?, ?, ?, ?)", (m1, pid_krist, 'goal', 67))
+    pid_ivan = _get_player_id("Иван Иванов", 1)
+    if pid_ivan:
+        cursor.execute("INSERT INTO events (match_id, player_id, club_id, event_type, minute) VALUES (?, ?, ?, 'goal', 23)", (m1, pid_ivan, 1))
+        cursor.execute("INSERT INTO events (match_id, player_id, club_id, event_type, minute) VALUES (?, ?, ?, 'appearance', 0)", (m2, pid_ivan, 1))
 
-    # Additional events for demo: goals, assists, bookings across different matches/players
-    cursor.execute("SELECT id FROM players WHERE full_name = ? AND club_id = 2", ("Димитър Иванов",))
-    row = cursor.fetchone()
-    if row:
-        pid_dim = row[0]
-        cursor.execute("INSERT INTO events (match_id, player_id, event_type, minute) VALUES (?, ?, ?, ?)", (m7, pid_dim, 'goal', 54))
+    pid_krist = _get_player_id("Кристиян Стоянов", 2)
+    if pid_krist:
+        cursor.execute("INSERT INTO events (match_id, player_id, club_id, event_type, minute) VALUES (?, ?, ?, 'goal', 67)", (m1, pid_krist, 2))
 
-    cursor.execute("SELECT id FROM players WHERE full_name = ? AND club_id = 3", ("Васил Лечков",))
-    row = cursor.fetchone()
-    if row:
-        pid_vasil = row[0]
-        cursor.execute("INSERT INTO events (match_id, player_id, event_type, minute) VALUES (?, ?, ?, ?)", (m3, pid_vasil, 'goal', 12))
-        cursor.execute("INSERT INTO events (match_id, player_id, event_type, minute) VALUES (?, ?, ?, ?)", (m3, pid_vasil, 'assist', 33))
+    pid_dim = _get_player_id("Димитър Иванов", 2)
+    if pid_dim:
+        cursor.execute("INSERT INTO events (match_id, player_id, club_id, event_type, minute) VALUES (?, ?, ?, 'goal', 54)", (m7, pid_dim, 2))
 
-    cursor.execute("SELECT id FROM players WHERE full_name = ? AND club_id = 4", ("Ивелин Попов",))
-    row = cursor.fetchone()
-    if row:
-        pid_ip = row[0]
-        cursor.execute("INSERT INTO events (match_id, player_id, event_type, minute) VALUES (?, ?, ?, ?)", (m4, pid_ip, 'yellow', 77))
+    pid_vasil = _get_player_id("Васил Лечков", 3)
+    if pid_vasil:
+        cursor.execute("INSERT INTO events (match_id, player_id, club_id, event_type, minute) VALUES (?, ?, ?, 'goal', 12)", (m3, pid_vasil, 3))
+        cursor.execute("INSERT INTO events (match_id, player_id, club_id, event_type, minute) VALUES (?, ?, ?, 'assist', 33)", (m3, pid_vasil, 3))
 
-    cursor.execute("SELECT id FROM players WHERE full_name = ? AND club_id = 6", ("Борислав Димитров",))
-    row = cursor.fetchone()
-    if row:
-        pid_boris = row[0]
-        cursor.execute("INSERT INTO events (match_id, player_id, event_type, minute) VALUES (?, ?, ?, ?)", (m5, pid_boris, 'goal', 85))
+    pid_ip = _get_player_id("Ивелин Попов", 4)
+    if pid_ip:
+        cursor.execute("INSERT INTO events (match_id, player_id, club_id, event_type, card_type, minute) VALUES (?, ?, ?, 'yellow', 'Y', 77)", (m4, pid_ip, 4))
 
-    conn.commit()
-    conn.close()
+    pid_boris = _get_player_id("Борислав Димитров", 6)
+    if pid_boris:
+        cursor.execute("INSERT INTO events (match_id, player_id, club_id, event_type, minute) VALUES (?, ?, ?, 'goal', 85)", (m5, pid_boris, 6))
+
 
 def get_connection():
     try:
-        # Ensure database is initialized
         initialize_database()
-
         conn = sqlite3.connect(DB_PATH)
-        # Ensure foreign key enforcement for each connection
         try:
             conn.execute('PRAGMA foreign_keys = ON')
         except Exception:
@@ -199,7 +191,6 @@ def get_connection():
         conn.row_factory = sqlite3.Row
         return conn
     except Exception as e:
-        # Catch all exceptions (including mocks that raise generic Exception)
         print(f"[DB ERROR] {e}")
         return None
 
@@ -208,65 +199,49 @@ def execute_query(query, params=(), fetch=False):
     conn = get_connection()
     if not conn:
         return None
-
     try:
         cursor = conn.cursor()
         cursor.execute(query, params)
-
         if fetch:
             results = cursor.fetchall()
             if not results:
                 return None
             return results
-
         conn.commit()
         return True
-
     except Error as e:
         print(f"[QUERY ERROR] {e}")
         return None
-
     finally:
         conn.close()
 
 
 def connect():
-    """Return a new DB connection (initialized)."""
     return get_connection()
 
 
 def execute(query: str, params=(), commit: bool = True):
-    """Execute a query (INSERT/UPDATE/DELETE) and optionally commit.
-
-    Returns lastrowid on insert, True on success, or None on error.
-    """
     conn = get_connection()
     if not conn:
         return None
-
     try:
         cursor = conn.cursor()
         cursor.execute(query, params)
         if commit:
             conn.commit()
-
         lastrowid = cursor.lastrowid
         return lastrowid if lastrowid else True
-
     except Error as e:
         print(f"[DB EXECUTE ERROR] {e}")
         return None
-
     finally:
         conn.close()
 
 
 def fetch_all(query: str, params=()):
-    """Fetch all rows for a SELECT query. Returns list of sqlite3.Row or empty list."""
     conn = get_connection()
     if not conn:
         return []
-
     try:
         cursor = conn.cursor()
         cursor.execute(query, params)
@@ -280,7 +255,6 @@ def fetch_all(query: str, params=()):
 
 
 def fetch_one(query: str, params=()):
-    """Fetch a single row for a SELECT query. Returns sqlite3.Row or None."""
     rows = fetch_all(query, params)
     if rows:
         return rows[0]
@@ -288,7 +262,6 @@ def fetch_one(query: str, params=()):
 
 
 def commit(conn):
-    """Commit a provided connection (best-effort)."""
     try:
         if conn:
             conn.commit()
@@ -297,11 +270,8 @@ def commit(conn):
 
 
 def rollback(conn):
-    """Rollback a provided connection (best-effort)."""
     try:
         if conn:
             conn.rollback()
     except Exception:
         pass
-
-
