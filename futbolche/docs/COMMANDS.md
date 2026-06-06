@@ -34,7 +34,7 @@ help
 
 **Examples:**
 ```
->> помощь
+>> помощ
 Налични команди:
 - помощ
 - изход
@@ -573,28 +573,39 @@ Create a new league/competition.
 **Syntax:**
 ```
 създай лига [league_name] сезон [season]
+създай лига [league_name] [season]
 добави лига [league_name] [season]
+нова лига [league_name] [season]
 ```
 
 **Parameters:**
 - `league_name` (string, required): Name of the league
-- `season` (string, required): Season identifier (e.g., "2024-2025", "2025")
+- `season` (string, required): Season identifier. Accepted formats: `2025`, `2025/26`, `2025/2026`, `2025-2026`
 
 **Examples:**
 ```
->> създай лига Първа Лига сезон 2025
-Лигата 'Първа Лига' (2025) беше създадена успешно.
+>> създай лига Първа Лига 2025/26
+Лига 'Първа Лига' (2025/26) беше създадена успешно.
 
->> добави лига Втора Лига 2024-2025
-Лигата 'Втора Лига' (2024-2025) беше създадена успешно.
+>> създай лига Първа Лига сезон 2025
+Лига 'Първа Лига' (2025) беше създадена успешно.
+
+>> добави лига Втора Лига 2024-2026
+Лига 'Втора Лига' (2024-2026) беше създадена успешно.
 ```
 
 **Validation:**
 - League name cannot be empty
 - Season cannot be empty
+- Season format must match: `^\d{4}([\/-]\d{2,4})?$` (e.g. `2025`, `2025/26`, `2025/2026`, `2025-2026`)
+- Duplicate (name + season) is prevented at database level and checked before insert
 
 **Error Messages:**
 - `"Името на лигата не може да бъде празно."`
+- `"Сезонът не може да бъде празен."`
+- `"Невалиден формат на сезон. Използвайте формат: 2025, 2025/26, 2025/2026 или 2025-2026."`
+- `"Лига с име '...' и сезон '...' вече съществува."`
+- `"Грешка при създаване на лига."`
 
 ---
 
@@ -623,14 +634,12 @@ Add a club to a league's roster.
 **Validation:**
 - Club must exist
 - League must exist
-- Club cannot be added twice to same league
+- Club cannot be added twice to same league (UNIQUE constraint)
 
 **Error Messages:**
-- `"Лигата не съществува."`
+- `"Няма лига с име/ID '...'."`
 - `"Клубът не съществува."`
 - `"Грешка при добавяне на клуба в лигата (възможно дублиране)."`
-
-**⚠️ Known Issue:** Pattern `"добави клуб [club] в лига [league]"` may be shadowed by `add_club` pattern `"добави клуб [club_name]"` due to order-dependent matching. Use alternative pattern `"включи [club] в [league]"` for reliable results.
 
 ---
 
@@ -639,26 +648,63 @@ List all clubs participating in a league.
 
 **Syntax:**
 ```
+покажи отбори в лига [league_identifier] [season]
 покажи отбори в лига [league_identifier]
+покажи отборите на [league_identifier] [season]
 покажи отборите на [league_identifier]
 ```
 
 **Parameters:**
 - `league_identifier` (string, required): League name or ID
+- `season` (string, optional): Season filter
 
 **Examples:**
 ```
 >> покажи отбори в лига Първа Лига
-Ето отборите в лигата:
-1. Левски
-2. ЦСКА
-3. Лудогорец
+- Левски София (ID: 1)
+- ЦСКА София (ID: 2)
+- Ботев Пловдив (ID: 3)
+- Лудогорец Разград (ID: 4)
 ```
 
-**Output:** List of clubs in the league.
+**Output:** List of clubs in the league with their IDs.
 
 **Error Messages:**
-- `"Лигата не съществува."` (returns empty list if not found)
+- `"Лигата не съществува или няма отбори."`
+
+---
+
+### `remove_club_from_league`
+Remove a club from a league's roster.
+
+**Syntax:**
+```
+премахни отбор [club_identifier] от лига [league_identifier]
+премахни клуб [club_identifier] от лига [league_identifier]
+изтрий отбор [club_identifier] от лига [league_identifier]
+```
+
+**Parameters:**
+- `club_identifier` (string, required): Club name or ID
+- `league_identifier` (string, required): League name or ID
+
+**Examples:**
+```
+>> премахни отбор Левски София от лига Първа Лига
+Клубът беше премахнат от лигата успешно.
+```
+
+**Validation:**
+- League must exist
+- Club must exist
+- Club must be in the league
+- Schedule must NOT exist (cannot remove team after schedule is generated)
+
+**Error Messages:**
+- `"Лигата не съществува."`
+- `"Клубът не съществува."`
+- `"Клубът не е в тази лига."`
+- `"Не можете да премахнете отбор, след като програмата е генерирана. Изтрийте програмата първо."`
 
 ---
 
@@ -694,9 +740,10 @@ Automatically generate match fixtures for a league using round-robin scheduling.
 
 **Error Messages:**
 - `"Недостатъчно отбори за създаване на кръгове."` - Less than 2 teams
-- `"Лигата не съществува."`
+- `"Няма лига с име/ID '...'."` - League not found
+- `"Програмата за тази лига вече е генерирана."` - Regeneration blocked
 
-**Notes:** This creates unplayed match fixtures (scores are NULL). Use `record_match` to update results, or `record_event` to log in-game events.
+**Notes:** This creates unplayed match fixtures (scores are NULL). Use `record_match` to update results, or `record_event` to log in-game events. Regeneration is blocked once matches exist.
 
 ---
 
@@ -950,27 +997,13 @@ Player positions use 2-letter codes:
 
 ## Known Issues & Limitations
 
-### 1. NLU Pattern Ordering
+### 1. NLU Pattern Ordering (FIXED)
 
-The chatbot uses first-match-wins sequential pattern matching. This causes 4 intents to have pattern conflicts:
+The NLU intent ordering was fixed by reordering `intents.json` — specific patterns now come before generic ones. `add_club_to_league`, `remove_club_from_league`, `delete_player`, `list_all_players`, and `record_match` all work correctly from their primary patterns.
 
-**Affected Commands:**
-- `delete_player` vs `delete_club`
-- `list_all_players` vs `list_players`
-- `add_club_to_league` vs `add_club`
-- `record_match` (completely broken)
+### 2. `record_match` (FIXED)
 
-**Workarounds:**
-- For `delete_player`: Use numeric player ID: `"изтрий играч 123"`
-- For `list_all_players`: Use `"всички играчи"` instead of `"покажи всички играчи"`
-- For `add_club_to_league`: Use `"включи [club] в [league]"` pattern
-- For `record_match`: Use alternative patterns `"добави мач ... vs ..."` or `"регистрирай мач ..."`
-
-**Recommended Fix:** Reorder intents in `intents.json` to place specific patterns before generic ones.
-
-### 2. `record_match` Broken
-
-The primary pattern `"запиши мач [home] срещу [away] дата [date] резултат [hg]-[ag]"` returns `unknown` intent due to regex construction issues with hyphens. Use alternative patterns until fixed.
+The primary pattern `"запиши мач [home] срещу [away] дата [date] резултат [hg]-[ag]"` now correctly returns `record_match` intent.
 
 ### 3. `record_event` Parameter Extraction
 
@@ -1005,14 +1038,21 @@ Bulgarian error messages may display incorrectly in Windows console (cp1252 vs c
 | `запиши мач` | Record match | home_team, away_team, date, home_goals, away_goals |
 | `покажи мач` | Show match details | match_id |
 | `запиши събитие` | Log in-game event | player_identifier, match_id, event_type, minute |
+| `покажи кръг` | Show round matches | round_no, league_name, season |
+| `резултат ... запиши` | Save match result | home_team, away_team, home_goals, away_goals |
+| `гол ... минута` | Add goal event | player_name, team_name, minute |
+| `картон ...` | Add card event | player_name, team_name, card_type, minute |
+| `избери мач` | Select active match | match_id |
+| `покажи събития` | Show match events | match_id |
 | `създай лига` | Create league | league_name, season |
 | `добави клуб в лига` | Add club to league | club_identifier, league_identifier |
+| `премахни отбор от лига` | Remove club from league | club_identifier, league_identifier |
 | `покажи отбори в лига` | List league teams | league_identifier |
 | `генерирай кръгове` | Generate fixtures | league_identifier |
 | `покажи класиране` | Show league standings | league_identifier |
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** 2025-03-02  
-**Based on:** `intents.json` and service layer implementation
+**Document Version:** 1.1  
+**Last Updated:** 2026-06-06  
+**Based on:** `intents.json` (28 intents) and service layer implementation

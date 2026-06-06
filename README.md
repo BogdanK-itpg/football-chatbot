@@ -2,41 +2,46 @@
 
 A command-line chatbot for managing football leagues, clubs, players, matches, and statistics. Built with Python and SQLite.
 
----
-
-## Table of Contents
-
-1. [Overview](#overview)
-2. [Features](#features)
-3. [Architecture](#architecture)
-4. [Installation & Setup](#installation--setup)
-5. [Usage](#usage)
-6. [Testing](#testing)
-7. [Maintenance](#maintenance)
-8. [Known Issues](#known-issues)
-9. [Future Enhancements](#future-enhancements)
-10. [License](#license)
+See `docs/README.md` for full documentation.
 
 ---
 
-## Overview
+## Quick Start
 
-**futbolche** is a text-based conversational interface for managing football league data. Users interact with the system using natural Bulgarian language commands to perform CRUD operations on clubs, players, matches, and leagues, and to retrieve statistics.
+```bash
+cd futbolche
+pip install -r requirements.txt
+python src/main.py
+```
 
-### Purpose
+## Documentation
 
-- Provide an intuitive, conversational interface for football data management
-- Demonstrate NLU (Natural Language Understanding) pattern matching
-- Serve as a learning project for database-driven applications
-- Enable quick data entry and querying without complex forms
+Full documentation is in `docs/README.md`, including:
+- Complete architecture and data flow
+- All 28 chatbot commands with examples
+- Round-robin algorithm explanation
+- Example dialogue (full league lifecycle)
+- Database schema with all constraints
+- Testing guide
+- Known issues
 
-### Technology Stack
+## Project Structure
 
-- **Language:** Python 3.x
-- **Database:** SQLite 3
-- **Architecture:** Layered (NLU → Router → Services → Database)
-- **Pattern Matching:** Regex-based intent classification
-- **Storage:** File-based SQLite database (`sql/futbolche.db`)
+```
+futbolche/
+├── src/
+│   ├── chatbot/           # NLU, router, intents.json
+│   ├── services/          # Business logic
+│   ├── repositories/      # Data access (SQL queries)
+│   ├── handlers/          # Match command handlers
+│   ├── utils/             # Logger
+│   ├── db.py              # SQLite connection management
+│   ├── validators.py      # Match event validation
+│   ├── state.py           # Match context state
+│   └── main.py            # CLI entry point
+├── sql/                   # schema.sql, migration.sql
+├── tests/                 # 118+ tests
+└── docs/README.md         # Full documentation
 
 ---
 

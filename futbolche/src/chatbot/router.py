@@ -22,12 +22,23 @@ CATEGORIES = {
     "Играчи": ["add_player", "list_players", "list_all_players", "update_player_position", "update_player_number", "update_player_status", "delete_player", "transfer_player"],
     "Статистика": ["club_statistics", "player_statistics", "player_metrics"],
     "Мачове": ["record_match", "show_match", "record_event", "get_fixtures", "show_round", "save_result", "add_goal", "add_card", "select_match", "show_events"],
-    "Лиги": ["create_league", "add_club_to_league", "get_league_teams", "generate_round_robin", "get_standings", "get_fixtures"],
+    "Лиги": ["create_league", "add_club_to_league", "remove_club_from_league", "get_league_teams", "generate_round_robin", "get_standings", "get_fixtures"],
 }
 
 
-def handle_intent(intent: str, params: Optional[Dict[str, str]]) -> str:
+def handle_intent(intent: str, params: Optional[Dict[str, str]], raw_input: str = "") -> str:
     """Route intent to the appropriate handler/service and return presentation string."""
+    result = _route(intent, params)
+    status = "OK"
+    error_keywords = ["грешка", "не съществува", "невалид", "недостатъч", "няма лига", "няма мач"]
+    if result and any(kw in result.lower() for kw in error_keywords):
+        status = "ERROR"
+    log_command(raw_input, intent, status, result)
+    return result
+
+
+def _route(intent: str, params: Optional[Dict[str, str]]) -> str:
+    """Route intent without logging (internal)."""
     if intent == 'help':
         help_lines = ["Налични команди:"]
         intents = _load_intents()
@@ -109,13 +120,18 @@ def handle_intent(intent: str, params: Optional[Dict[str, str]]) -> str:
             return "Недостатъчни параметри. Формат: добави клуб [клуб] в лига [лига]"
         return leagues.add_club_to_league(params['league_identifier'], params['club_identifier'])
 
+    if intent == 'remove_club_from_league':
+        if not params or 'club_identifier' not in params or 'league_identifier' not in params:
+            return "Формат: премахни отбор [клуб] от лига [лига]"
+        return leagues.remove_club_from_league(params['league_identifier'], params['club_identifier'])
+
     if intent == 'get_league_teams':
         if not params or 'league_identifier' not in params:
             return "Формат: покажи отбори в лига [лига]"
         teams = leagues.get_league_teams(params['league_identifier'])
         if not teams:
             return "Лигата не съществува или няма отбори."
-        return "\n".join(f"- {t['name']}" for t in teams)
+        return "\n".join(f"- {t['name']} (ID: {t['id']})" for t in teams)
 
     if intent == 'generate_round_robin':
         if not params or 'league_identifier' not in params:
@@ -240,7 +256,7 @@ def handle_intent(intent: str, params: Optional[Dict[str, str]]) -> str:
     if intent == 'get_standings':
         if not params or 'league_identifier' not in params:
             return "Формат: покажи класиране [league_identifier]"
-        return matches.get_league_standings(params['league_identifier'])
+        return leagues.get_standings(params['league_identifier'])
 
     if intent == 'transfer_player':
         if not params or 'player_identifier' not in params or 'club_identifier' not in params:

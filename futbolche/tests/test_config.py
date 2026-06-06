@@ -69,7 +69,7 @@ def teardown_function():
 
 def create_test_clubs():
     """Create test clubs for testing"""
-    from services.clubs_service import create_club
+    from services.clubs_service import add_club as create_club
     clubs = [
         "Левски София",
         "ЦСКА София", 

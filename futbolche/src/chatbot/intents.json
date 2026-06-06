@@ -13,49 +13,97 @@
       "examples": ["изход"]
     },
     {
-      "tag": "select_match",
-      "patterns": ["избери мач [match_id]"],
-      "responses": ["Мачът е избран."],
-      "examples": ["избери мач 5"]
+      "tag": "create_league",
+      "patterns": [
+        "създай лига [league_name] за сезон [season]",
+        "добави лига [league_name] за сезон [season]",
+        "създай лига [league_name] сезон [season]",
+        "нова лига [league_name] сезон [season]",
+        "създай лига [league_name] [season]",
+        "добави лига [league_name] [season]",
+        "нова лига [league_name] [season]"
+      ],
+      "responses": ["Лигата беше създадена."],
+      "examples": ["създай лига [league_name] сезон [season]"]
     },
     {
-      "tag": "show_events",
-      "patterns": ["покажи събития [match_id]", "покажи събития", "събития за мач [match_id]"],
-      "responses": ["Ето събитията в мача:"],
-      "examples": ["покажи събития 5"]
-    },
-    {
-      "tag": "show_round",
-      "patterns": ["покажи кръг [round_no] [league_name] [season]", "покажи кръг [round_no] [league_name]"],
-      "responses": ["Ето мачовете за този кръг:"],
-      "examples": ["покажи кръг 1 Първа Лига 2025"]
-    },
-    {
-      "tag": "save_result",
-      "patterns": ["резултат [home_team]-[away_team] [home_goals]:[away_goals] запиши"],
-      "responses": ["Резултатът е записан."],
-      "examples": ["резултат Левски-ЦСКА 2:1 запиши"]
-    },
-    {
-      "tag": "add_goal",
-      "patterns": ["гол [player_name] [team_name] [minute] минута"],
-      "responses": ["Голът е записан."],
-      "examples": ["гол Иван Иванов Левски 23 минута"]
-    },
-    {
-      "tag": "add_card",
-      "patterns": ["картон [player_name] [team_name] [card_type] [minute]"],
-      "responses": ["Картонът е записан."],
-      "examples": ["картон Петър Петров ЦСКА Y 55"]
+      "tag": "remove_club_from_league",
+      "patterns": [
+        "премахни отбор [club_identifier] от лига [league_identifier]",
+        "премахни клуб [club_identifier] от лига [league_identifier]",
+        "изтрий отбор [club_identifier] от лига [league_identifier]"
+      ],
+      "responses": ["Клубът беше премахнат от лигата."],
+      "examples": ["премахни отбор [club_identifier] от лига [league_identifier]"]
     },
     {
       "tag": "add_club_to_league",
       "patterns": [
+        "добави клуб [club_identifier] в лига [league_identifier] [season]",
         "добави клуб [club_identifier] в лига [league_identifier]",
+        "включи [club_identifier] в [league_identifier] [season]",
         "включи [club_identifier] в [league_identifier]"
       ],
       "responses": ["Клубът беше добавен в лигата."],
       "examples": ["добави клуб [club_identifier] в лига [league_identifier]"]
+    },
+    {
+      "tag": "get_league_teams",
+      "patterns": [
+        "покажи отбори в лига [league_identifier] [season]",
+        "покажи отбори в лига [league_identifier]",
+        "покажи отборите на [league_identifier] [season]",
+        "покажи отборите на [league_identifier]"
+      ],
+      "responses": ["Ето отборите в лигата:"],
+      "examples": ["покажи отбори в лига [league_identifier]"]
+    },
+    {
+      "tag": "generate_round_robin",
+      "patterns": [
+        "генерирай кръгове за лига [league_identifier] [season]",
+        "генерирай кръгове за лига [league_identifier]",
+        "създай кръгове [league_identifier] [season]",
+        "създай кръгове [league_identifier]",
+        "генерирай програма [league_identifier] [season]",
+        "генерирай програма [league_identifier]"
+      ],
+      "responses": ["Календарът беше генериран."],
+      "examples": ["генерирай кръгове за лига [league_identifier]"]
+    },
+    {
+      "tag": "get_standings",
+      "patterns": [
+        "покажи класиране [league_identifier] [season]",
+        "покажи класиране [league_identifier]",
+        "класиране на лига [league_identifier] [season]",
+        "класиране на лига [league_identifier]"
+      ],
+      "responses": ["Ето класирането:"],
+      "examples": ["покажи класиране [league_identifier]"]
+    },
+    {
+      "tag": "get_fixtures",
+      "patterns": [
+        "покажи мачове в лига [league_identifier] [season]",
+        "покажи мачове в лига [league_identifier]",
+        "покажи кръгове за лига [league_identifier] [season]",
+        "покажи кръгове за лига [league_identifier]"
+      ],
+      "responses": ["Ето мачовете:"],
+      "examples": ["покажи мачове в лига [league_identifier]"]
+    },
+    {
+      "tag": "delete_player",
+      "patterns": ["изтрий играч [player_identifier]", "премахни играч [player_identifier]"],
+      "responses": ["Играчът беше изтрит."],
+      "examples": ["изтрий играч [player_identifier]"]
+    },
+    {
+      "tag": "list_all_players",
+      "patterns": ["покажи всички играчи", "всички играчи", "списък с всички играчи"],
+      "responses": ["Ето списък с всички играчи:"],
+      "examples": ["покажи всички играчи"]
     },
     {
       "tag": "add_club",
@@ -112,12 +160,6 @@
       "examples": ["покажи играчи на клуб [club_identifier]"]
     },
     {
-      "tag": "list_all_players",
-      "patterns": ["покажи всички играчи", "всички играчи", "списък с всички играчи"],
-      "responses": ["Ето списък с всички играчи:"],
-      "examples": ["покажи всички играчи"]
-    },
-    {
       "tag": "update_player_position",
       "patterns": [
         "смени позиция на [player_identifier] на [new_position]",
@@ -143,12 +185,6 @@
       ],
       "responses": ["Статусът е обновен."],
       "examples": ["смени статус на [player_identifier] на [new_status]"]
-    },
-    {
-      "tag": "delete_player",
-      "patterns": ["изтрий играч [player_identifier]", "премахни играч [player_identifier]"],
-      "responses": ["Играчът беше изтрит."],
-      "examples": ["изтрий играч [player_identifier]"]
     },
     {
       "tag": "club_statistics",
@@ -197,6 +233,42 @@
       "examples": ["трансферирай играч [player_identifier] в клуб [club_identifier]", "премести играч [player_identifier] в [club_identifier]"]
     },
     {
+      "tag": "select_match",
+      "patterns": ["избери мач [match_id]"],
+      "responses": ["Мачът е избран."],
+      "examples": ["избери мач 5"]
+    },
+    {
+      "tag": "show_events",
+      "patterns": ["покажи събития [match_id]", "покажи събития", "събития за мач [match_id]"],
+      "responses": ["Ето събитията в мача:"],
+      "examples": ["покажи събития 5"]
+    },
+    {
+      "tag": "show_round",
+      "patterns": ["покажи кръг [round_no] [league_name] [season]", "покажи кръг [round_no] [league_name]"],
+      "responses": ["Ето мачовете за този кръг:"],
+      "examples": ["покажи кръг 1 Първа Лига 2025"]
+    },
+    {
+      "tag": "save_result",
+      "patterns": ["резултат [home_team]-[away_team] [home_goals]:[away_goals] запиши"],
+      "responses": ["Резултатът е записан."],
+      "examples": ["резултат Левски-ЦСКА 2:1 запиши"]
+    },
+    {
+      "tag": "add_goal",
+      "patterns": ["гол [player_name] [team_name] [minute] минута"],
+      "responses": ["Голът е записан."],
+      "examples": ["гол Иван Иванов Левски 23 минута"]
+    },
+    {
+      "tag": "add_card",
+      "patterns": ["картон [player_name] [team_name] [card_type] [minute]"],
+      "responses": ["Картонът е записан."],
+      "examples": ["картон Петър Петров ЦСКА Y 55"]
+    },
+    {
       "tag": "record_match",
       "patterns": [
         "запиши мач [home_team] срещу [away_team] дата [match_date] резултат [home_goals]-[away_goals]",
@@ -213,30 +285,6 @@
       "examples": ["покажи мач [match_id]"]
     },
     {
-      "tag": "create_league",
-      "patterns": ["създай лига [league_name] за сезон [season]", "добави лига [league_name] за сезон [season]", "създай лига [league_name] сезон [season]", "нова лига [league_name] сезон [season]"],
-      "responses": ["Лигата беше създадена."],
-      "examples": ["създай лига [league_name] за сезон [season]", "създай лига [league_name] сезон [season]"]
-    },
-    {
-      "tag": "get_league_teams",
-      "patterns": ["покажи отбори в лига [league_identifier]", "покажи отборите на [league_identifier]"],
-      "responses": ["Ето отборите в лигата:"],
-      "examples": ["покажи отбори в лига [league_identifier]"]
-    },
-    {
-      "tag": "generate_round_robin",
-      "patterns": ["генерирай кръгове за лига [league_identifier]", "създай кръгове [league_identifier]"],
-      "responses": ["Календарът беше генериран."],
-      "examples": ["генерирай кръгове за лига [league_identifier]"]
-    },
-    {
-      "tag": "get_standings",
-      "patterns": ["покажи класиране [league_identifier]", "класиране на лига [league_identifier]"],
-      "responses": ["Ето класирането:"],
-      "examples": ["покажи класиране [league_identifier]"]
-    },
-    {
       "tag": "record_event",
       "patterns": [
         "запиши гол [player_identifier] в мач [match_id] минута [minute]",
@@ -247,12 +295,6 @@
       ],
       "responses": ["Събитието беше записано."],
       "examples": ["запиши гол [player_identifier] в мач [match_id] минута [minute]"]
-    },
-    {
-      "tag": "get_fixtures",
-      "patterns": ["покажи мачове в лига [league_identifier]", "покажи кръгове за лига [league_identifier]"],
-      "responses": ["Ето мачовете:"],
-      "examples": ["покажи мачове в лига [league_identifier]"]
     }
   ]
 }

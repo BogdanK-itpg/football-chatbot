@@ -20,9 +20,9 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from test_config import test_config
 from chatbot.chatbot import parse_and_handle, parse_input_wrapper
-from services.clubs_service import create_club, list_clubs, delete_club, update_club
+from services.clubs_service import add_club as create_club, get_all_clubs as list_clubs, delete_club, update_club
 from services.players_service import add_player, get_players_by_club, update_player_position, update_player_number, update_player_status, delete_player, get_club_id
-from services.matches_service import record_match, get_match, record_event, get_league_standings, get_match_events
+from services.matches_service import record_match, get_match, record_event, get_match_events
 from services.leagues_service import create_league, add_club_to_league, generate_round_robin, get_fixtures, get_league_teams
 from services.statistics_service import get_club_statistics, get_player_statistics, get_player_advanced_metrics
 from services.transfers_service import transfer_player
@@ -109,12 +109,10 @@ class TestAllIntentsIntegration(unittest.TestCase):
         self.assertIn("club_name", params)
 
     def test_nlu_delete_player_patterns(self):
-        """Test delete_player patterns - KNOWN ISSUE: 'изтрий играч' matches delete_club due to ordering"""
-        # This currently fails because "изтрий [club_name]" in delete_club matches first
+        """Test delete_player patterns - FIXED by NLU reordering"""
         intent, params = parse_input_wrapper("изтрий играч Иван")
-        # Expected: delete_player, Actual: delete_club (due to pattern ordering)
-        # This documents the current behavior
-        self.assertEqual(intent, "delete_club")  # Current (incorrect) behavior
+        self.assertEqual(intent, "delete_player")
+        self.assertIn("player_identifier", params)
 
     def test_nlu_update_club_patterns(self):
         """Test update_club patterns"""
@@ -136,11 +134,10 @@ class TestAllIntentsIntegration(unittest.TestCase):
         self.assertIn("club_identifier", params)
 
     def test_nlu_list_all_players_patterns(self):
-        """Test list_all_players patterns - KNOWN ISSUE: 'покажи всички играчи' matches list_players"""
-        # This fails because "покажи играчи [club_identifier]" in list_players matches first
+        """Test list_all_players patterns - FIXED by NLU reordering"""
         intent, params = parse_input_wrapper("покажи всички играчи")
-        # Expected: list_all_players, Actual: list_players (due to pattern ordering)
-        self.assertEqual(intent, "list_players")  # Current (incorrect) behavior
+        self.assertEqual(intent, "list_all_players")
+        self.assertIsNone(params)
 
     def test_nlu_update_player_position_patterns(self):
         """Test update_player_position patterns"""
@@ -182,12 +179,14 @@ class TestAllIntentsIntegration(unittest.TestCase):
         self.assertIn("club_identifier", params)
 
     def test_nlu_record_match_patterns(self):
-        """Test record_match patterns - KNOWN ISSUE: Pattern doesn't match correctly"""
-        # The pattern "запиши мач ... срещу ... дата ... резултат ..." doesn't match
-        # Possibly due to regex construction issues with the date and score patterns
+        """Test record_match patterns - FIXED by NLU reordering"""
         intent, params = parse_input_wrapper("запиши мач Левски срещу ЦСКА дата 2025-09-01 резултат 2-1")
-        # Expected: record_match, Actual: unknown
-        self.assertEqual(intent, "unknown")  # Current (incorrect) behavior
+        self.assertEqual(intent, "record_match")
+        self.assertIn("home_team", params)
+        self.assertIn("away_team", params)
+        self.assertIn("match_date", params)
+        self.assertIn("home_goals", params)
+        self.assertIn("away_goals", params)
 
     def test_nlu_show_match_patterns(self):
         """Test show_match patterns"""
@@ -203,11 +202,11 @@ class TestAllIntentsIntegration(unittest.TestCase):
         self.assertIn("season", params)
 
     def test_nlu_add_club_to_league_patterns(self):
-        """Test add_club_to_league patterns - KNOWN ISSUE: 'добави клуб ... в лига' matches add_club"""
-        # This fails because "добави клуб [club_name]" in add_club matches first
+        """Test add_club_to_league patterns - FIXED by NLU reordering"""
         intent, params = parse_input_wrapper("добави клуб Левски София в лига Нова Лига")
-        # Expected: add_club_to_league, Actual: add_club (due to pattern ordering)
-        self.assertEqual(intent, "add_club")  # Current (incorrect) behavior
+        self.assertEqual(intent, "add_club_to_league")
+        self.assertIn("club_identifier", params)
+        self.assertIn("league_identifier", params)
 
     def test_nlu_get_league_teams_patterns(self):
         """Test get_league_teams patterns"""
@@ -522,7 +521,7 @@ class TestAllIntentsIntegration(unittest.TestCase):
     def test_get_standings_nonexistent_league(self):
         """Test get_standings with non-existent league"""
         response = parse_and_handle("покажи класиране Несъществуваща Лига")
-        self.assertIn("не съществува", response.lower())
+        self.assertIn("няма лига", response.lower())
 
     def test_create_league_empty_name(self):
         """Test create_league with empty name"""
@@ -532,7 +531,7 @@ class TestAllIntentsIntegration(unittest.TestCase):
     def test_add_club_to_league_nonexistent(self):
         """Test add_club_to_league with non-existent club or league"""
         response = parse_and_handle("добави клуб Несъществуващ в лига Несъществуваща")
-        self.assertTrue("не съществува" in response.lower())
+        self.assertTrue("няма лига" in response.lower())
 
     def test_generate_round_robin_few_teams(self):
         """Test generate_round_robin with insufficient teams"""

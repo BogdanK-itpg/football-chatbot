@@ -1,20 +1,31 @@
 from datetime import date, timedelta, datetime
+import re
+from typing import Optional
 from repositories import leagues_repo, clubs_repo, matches_repo
 
 
 def create_league(name: str, season: str):
     if not name or not name.strip():
         return "Името на лигата не може да бъде празно."
-    res = leagues_repo.create(name.strip(), season.strip())
+    if not season or not season.strip():
+        return "Сезонът не може да бъде празен."
+    season = season.strip()
+    if not re.match(r'^\d{4}([\/-]\d{2,4})?$', season):
+        return "Невалиден формат на сезон. Използвайте формат: 2025, 2025/26, 2025/2026 или 2025-2026."
+    name_clean = name.strip()
+    existing = leagues_repo.get_by_name_season(name_clean, season)
+    if existing:
+        return f"Лига с име '{name_clean}' и сезон '{season}' вече съществува."
+    res = leagues_repo.create(name_clean, season)
     if res is None:
         return "Грешка при създаване на лига."
-    return f"Лига '{name}' ({season}) беше създадена успешно."
+    return f"Лига '{name_clean}' ({season}) беше създадена успешно."
 
 
 def add_club_to_league(league_identifier, club_identifier):
     lid = leagues_repo.resolve_id(league_identifier)
     if not lid:
-        return "Лигата не съществува."
+        return f"Няма лига с име/ID '{league_identifier}'."
     cid = None
     if str(club_identifier).isdigit():
         club = clubs_repo.get_by_id(int(club_identifier))
@@ -40,14 +51,17 @@ def get_league_teams(league_identifier):
     return rows or []
 
 
-def generate_round_robin(league_identifier, double_round: bool = False, start_date: str = None, interval_days: int = 7):
+def generate_round_robin(league_identifier, double_round: bool = False, start_date: Optional[str] = None, interval_days: int = 7):
     teams = get_league_teams(league_identifier)
     if not teams or len(teams) < 2:
         return "Недостатъчно отбори за създаване на кръгове."
     lid = leagues_repo.resolve_id(league_identifier)
     if not lid:
-        return "Лигата не съществува."
-    club_ids = [t['id'] for t in teams]
+        return f"Няма лига с име/ID '{league_identifier}'."
+
+    existing = matches_repo.get_by_league(lid)
+    if existing:
+        return "Програмата за тази лига вече е генерирана."
 
     if start_date:
         try:
@@ -57,24 +71,46 @@ def generate_round_robin(league_identifier, double_round: bool = False, start_da
     else:
         current = date.today()
 
+    club_ids = [t['id'] for t in teams]
+    n = len(club_ids)
+
+    # Circle Method for round-robin scheduling
+    if n % 2 == 1:
+        club_ids.append(None)  # BYE placeholder
+        n += 1
+
+    fixed = club_ids[0]
+    rotating = club_ids[1:]
+    total_rounds = n - 1
     created = 0
-    round_no = 1
-    for i in range(len(club_ids)):
-        for j in range(i + 1, len(club_ids)):
-            res = matches_repo.create(club_ids[i], club_ids[j], current.isoformat(), league_id=lid, round_no=round_no)
+
+    def _schedule_round(round_no, home_first, away_first):
+        nonlocal created, current
+        fixtures = []
+        for i in range(n // 2):
+            if i == 0:
+                home, away = fixed, rotating[n - 2]
+            else:
+                home, away = rotating[i - 1], rotating[n - 2 - i]
+            if home is None or away is None:
+                continue
+            if (i == 0 and round_no % 2 == 1) or (i != 0 and round_no % 2 == 0):
+                home, away = away, home
+            fixtures.append((home, away))
+        for home, away in fixtures:
+            res = matches_repo.create(home, away, current.isoformat(), league_id=lid, round_no=round_no)
             if res:
                 created += 1
-            current = current + timedelta(days=interval_days)
-        round_no += 1
+        current += timedelta(days=interval_days)
+
+    for round_no in range(1, total_rounds + 1):
+        _schedule_round(round_no, True, True)
+        rotating = [rotating[-1]] + rotating[:-1]
 
     if double_round:
-        for i in range(len(club_ids)):
-            for j in range(i + 1, len(club_ids)):
-                res = matches_repo.create(club_ids[j], club_ids[i], current.isoformat(), league_id=lid, round_no=round_no)
-                if res:
-                    created += 1
-                current = current + timedelta(days=interval_days)
-            round_no += 1
+        for round_no in range(total_rounds + 1, 2 * total_rounds + 1):
+            _schedule_round(round_no, False, True)
+            rotating = [rotating[-1]] + rotating[:-1]
 
     return f"Създадени {created} мача за лига {league_identifier}."
 
@@ -82,7 +118,7 @@ def generate_round_robin(league_identifier, double_round: bool = False, start_da
 def get_standings(league_identifier):
     lid = leagues_repo.resolve_id(league_identifier)
     if not lid:
-        return "Лигата не съществува."
+        return f"Няма лига с име/ID '{league_identifier}'."
     rows = matches_repo.get_by_league(lid)
     if not rows:
         return "Няма мачове в тази лига."
@@ -134,10 +170,37 @@ def get_standings(league_identifier):
     return "\n".join(lines)
 
 
-def get_fixtures(league_identifier):
+def remove_club_from_league(league_identifier, club_identifier):
     lid = leagues_repo.resolve_id(league_identifier)
     if not lid:
         return "Лигата не съществува."
+    cid = None
+    if str(club_identifier).isdigit():
+        club = clubs_repo.get_by_id(int(club_identifier))
+        if club:
+            cid = club['id']
+    else:
+        club = clubs_repo.get_by_name(club_identifier)
+        if club:
+            cid = club['id']
+    if not cid:
+        return "Клубът не съществува."
+    existing = leagues_repo.get_teams(lid)
+    if not any(t['id'] == cid for t in existing):
+        return "Клубът не е в тази лига."
+    schedule = matches_repo.get_by_league(lid)
+    if schedule:
+        return "Не можете да премахнете отбор, след като програмата е генерирана. Изтрийте програмата първо."
+    res = leagues_repo.remove_team(lid, cid)
+    if res is None:
+        return "Грешка при премахване на клуба от лигата."
+    return "Клубът беше премахнат от лигата успешно."
+
+
+def get_fixtures(league_identifier):
+    lid = leagues_repo.resolve_id(league_identifier)
+    if not lid:
+        return f"Няма лига с име/ID '{league_identifier}'."
     rows = matches_repo.get_by_league(lid)
     if not rows:
         return "Няма насрочени мачове."

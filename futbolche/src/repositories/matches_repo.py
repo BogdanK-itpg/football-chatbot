@@ -1,3 +1,4 @@
+from typing import Optional
 from db import fetch_one, fetch_all, execute
 
 
@@ -12,7 +13,7 @@ def get_by_id(match_id: int):
     )
 
 
-def get_by_league(league_id: int, round_no: int = None):
+def get_by_league(league_id: int, round_no: Optional[int] = None):
     if round_no is not None:
         return fetch_all(
             """SELECT m.*, hc.name as home_name, ac.name as away_name
@@ -58,6 +59,8 @@ def get_all():
 
 def create(home_team_id: int, away_team_id: int, match_date: str,
            home_goals=None, away_goals=None, league_id=None, round_no=None):
+    if home_team_id == away_team_id:
+        return None
     return execute(
         "INSERT INTO matches (home_team_id, away_team_id, match_date, home_goals, away_goals, league_id, round_no) VALUES (?, ?, ?, ?, ?, ?, ?)",
         (home_team_id, away_team_id, match_date, home_goals, away_goals, league_id, round_no)

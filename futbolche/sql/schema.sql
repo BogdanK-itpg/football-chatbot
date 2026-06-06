@@ -40,7 +40,8 @@ CREATE TABLE matches (
     is_played INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (home_team_id) REFERENCES clubs(id) ON DELETE CASCADE,
     FOREIGN KEY (away_team_id) REFERENCES clubs(id) ON DELETE CASCADE,
-    FOREIGN KEY (league_id) REFERENCES leagues(id) ON DELETE CASCADE
+    FOREIGN KEY (league_id) REFERENCES leagues(id) ON DELETE CASCADE,
+    UNIQUE(league_id, round_no, home_team_id, away_team_id)
 );
 
 -- =====================================
@@ -49,7 +50,9 @@ CREATE TABLE matches (
 CREATE TABLE leagues (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    season TEXT NOT NULL
+    season TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(name, season)
 );
 
 -- =====================================
@@ -59,6 +62,7 @@ CREATE TABLE league_teams (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     league_id INTEGER NOT NULL,
     club_id INTEGER NOT NULL,
+    joined_at TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(league_id, club_id),
     FOREIGN KEY (league_id) REFERENCES leagues(id) ON DELETE CASCADE,
     FOREIGN KEY (club_id) REFERENCES clubs(id) ON DELETE CASCADE

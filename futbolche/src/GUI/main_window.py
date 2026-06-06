@@ -133,20 +133,13 @@ class FootballChatbotGUI:
     def _process_input(self, user_input):
         try:
             intent, params = parse_input_nlu(user_input)
-            response = handle_intent_router(intent, params)
+            response = handle_intent_router(intent, params, raw_input=user_input)
 
             if response == "exit":
                 self.root.quit()
                 return
 
             self._add_message("Bot", response)
-
-            status = "OK"
-            reason = ""
-            error_keywords = ["грешка", "не съществува", "невалид", "няма", "не може", "вече", "изтрит"]
-            if any(kw in response.lower() for kw in error_keywords):
-                status = "ERROR" if any(kw in response.lower() for kw in ["грешка", "не съществува", "невалид"]) else "OK"
-            log_command(user_input, intent, status, reason)
         except Exception as e:
             self._add_message("Bot", f"Грешка: {str(e)}")
             log_command(user_input, "unknown", "ERROR", str(e))

@@ -79,72 +79,6 @@ def get_league_fixtures(league_identifier):
     return "\n".join(out)
 
 
-def get_league_standings(league_identifier):
-    lid = _resolve_league_id(league_identifier)
-    if not lid:
-        return "Лигата не съществува."
-    teams_rows = _get_league_teams(lid)
-    if not teams_rows:
-        return "Няма отбори в тази лига."
-    table = []
-    for t in teams_rows:
-        cid = t['club_id']
-        rows = matches_repo.get_by_league(lid)
-        stats = {'P': 0, 'W': 0, 'D': 0, 'L': 0, 'GF': 0, 'GA': 0, 'Pts': 0}
-        for r in rows:
-            if r['home_goals'] is None or r['away_goals'] is None:
-                continue
-            if r['home_team_id'] != cid and r['away_team_id'] != cid:
-                continue
-            is_home = (r['home_team_id'] == cid)
-            hg = r['home_goals']
-            ag = r['away_goals']
-            stats['P'] += 1
-            if is_home:
-                stats['GF'] += hg
-                stats['GA'] += ag
-                if hg > ag:
-                    stats['W'] += 1
-                    stats['Pts'] += 3
-                elif hg < ag:
-                    stats['L'] += 1
-                else:
-                    stats['D'] += 1
-                    stats['Pts'] += 1
-            else:
-                stats['GF'] += ag
-                stats['GA'] += hg
-                if ag > hg:
-                    stats['W'] += 1
-                    stats['Pts'] += 3
-                elif ag < hg:
-                    stats['L'] += 1
-                else:
-                    stats['D'] += 1
-                    stats['Pts'] += 1
-        stats['GD'] = stats['GF'] - stats['GA']
-        table.append({
-            'club_name': t['club_name'],
-            'played': stats['P'],
-            'wins': stats['W'],
-            'draws': stats['D'],
-            'losses': stats['L'],
-            'goals_for': stats['GF'],
-            'goals_against': stats['GA'],
-            'goal_difference': stats['GD'],
-            'points': stats['Pts']
-        })
-    table.sort(key=lambda x: (-x['points'], -x['goal_difference'], -x['goals_for'], x['club_name']))
-    out = []
-    for pos, row in enumerate(table, start=1):
-        out.append(
-            f"{pos}. {row['club_name']} — P:{row['played']} W:{row['wins']} D:{row['draws']} "
-            f"L:{row['losses']} GF:{row['goals_for']} GA:{row['goals_against']} "
-            f"GD:{row['goal_difference']} Pts:{row['points']}"
-        )
-    return "\n".join(out)
-
-
 # ---------------------------------------------------------------------------
 # Event recording (used by handlers AFTER validation)
 # ---------------------------------------------------------------------------
@@ -180,6 +114,4 @@ def _resolve_league_id(league_identifier):
     return leagues_repo.resolve_id(league_identifier)
 
 
-def _get_league_teams(league_id):
-    from repositories import leagues_repo
-    return leagues_repo.get_teams(league_id)
+

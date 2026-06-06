@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 # Ensure tests directory is on path so test helpers (test_config) can be imported
 sys.path.insert(0, os.path.dirname(__file__))
 
-from services.clubs_service import create_club, list_clubs, delete_club
+from services.clubs_service import add_club as create_club, get_all_clubs as list_clubs, delete_club
 from db import execute_query
 
 

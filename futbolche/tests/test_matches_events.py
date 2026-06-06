@@ -71,7 +71,7 @@ class TestMatchesEvents(unittest.TestCase):
         matches.record_match('ЦСКА София', 'Ботев Пловдив', '2025-09-02', home_goals=0, away_goals=1, league_id=lid)
         matches.record_match('Ботев Пловдив', 'Левски София', '2025-09-03', home_goals=0, away_goals=0, league_id=lid)
 
-        standings = matches.get_league_standings(lid)
+        standings = leagues.get_standings(lid)
         self.assertIsInstance(standings, str)
         # Levski should be top with 4 points (win + draw)
         self.assertIn('Левски София', standings)

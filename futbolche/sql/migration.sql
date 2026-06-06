@@ -28,3 +28,14 @@ ALTER TABLE events ADD COLUMN card_type TEXT DEFAULT NULL CHECK(card_type IS NUL
 -- Backfill card_type from event_type
 UPDATE events SET card_type = 'Y' WHERE event_type = 'yellow';
 UPDATE events SET card_type = 'R' WHERE event_type = 'red';
+
+-- Add created_at and unique constraint to leagues
+ALTER TABLE leagues ADD COLUMN created_at TEXT NOT NULL DEFAULT (datetime('now'));
+CREATE UNIQUE INDEX IF NOT EXISTS idx_leagues_name_season ON leagues(name, season);
+
+-- Add joined_at to league_teams
+ALTER TABLE league_teams ADD COLUMN joined_at TEXT NOT NULL DEFAULT (datetime('now'));
+
+-- Add unique constraint on matches to prevent duplicates
+CREATE UNIQUE INDEX IF NOT EXISTS idx_matches_league_round_teams
+    ON matches(league_id, round_no, home_team_id, away_team_id);

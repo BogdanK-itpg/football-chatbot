@@ -23,6 +23,13 @@ def get_by_name(name: str):
     return fetch_one("SELECT * FROM leagues WHERE LOWER(name) = LOWER(?)", (name.strip(),))
 
 
+def get_by_name_season(name: str, season: str):
+    return fetch_one(
+        "SELECT * FROM leagues WHERE LOWER(name) = LOWER(?) AND LOWER(season) = LOWER(?)",
+        (name.strip(), season.strip())
+    )
+
+
 def create(name: str, season: str):
     return execute("INSERT INTO leagues (name, season) VALUES (?, ?)", (name, season))
 
@@ -37,5 +44,12 @@ def get_teams(league_id: int):
 def add_team(league_id: int, club_id: int):
     return execute(
         "INSERT INTO league_teams (league_id, club_id) VALUES (?, ?)",
+        (league_id, club_id)
+    )
+
+
+def remove_team(league_id: int, club_id: int):
+    return execute(
+        "DELETE FROM league_teams WHERE league_id = ? AND club_id = ?",
         (league_id, club_id)
     )
