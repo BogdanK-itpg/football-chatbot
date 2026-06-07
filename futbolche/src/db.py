@@ -179,6 +179,11 @@ def _insert_sample_data(conn, cursor):
     if pid_boris:
         cursor.execute("INSERT INTO events (match_id, player_id, club_id, event_type, minute) VALUES (?, ?, ?, 'goal', 85)", (m5, pid_boris, 6))
 
+    seed_transfers_path = os.path.join(os.path.dirname(SCHEMA_PATH), "seed_transfers.sql")
+    if os.path.exists(seed_transfers_path):
+        with open(seed_transfers_path, 'r', encoding='utf-8') as f:
+            cursor.executescript(f.read())
+
 
 def get_connection():
     try:
@@ -220,22 +225,32 @@ def connect():
     return get_connection()
 
 
-def execute(query: str, params=(), commit: bool = True):
-    conn = get_connection()
-    if not conn:
-        return None
-    try:
-        cursor = conn.cursor()
-        cursor.execute(query, params)
-        if commit:
-            conn.commit()
-        lastrowid = cursor.lastrowid
-        return lastrowid if lastrowid else True
-    except Error as e:
-        print(f"[DB EXECUTE ERROR] {e}")
-        return None
-    finally:
-        conn.close()
+def execute(query: str, params=(), commit: bool = True, conn=None):
+    if conn is None:
+        own_conn = get_connection()
+        if not own_conn:
+            return None
+        try:
+            cursor = own_conn.cursor()
+            cursor.execute(query, params)
+            if commit:
+                own_conn.commit()
+            lastrowid = cursor.lastrowid
+            return lastrowid if lastrowid else True
+        except Error as e:
+            print(f"[DB EXECUTE ERROR] {e}")
+            return None
+        finally:
+            own_conn.close()
+    else:
+        try:
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            lastrowid = cursor.lastrowid
+            return lastrowid if lastrowid else True
+        except Error as e:
+            print(f"[DB EXECUTE ERROR] {e}")
+            return None
 
 
 def fetch_all(query: str, params=()):

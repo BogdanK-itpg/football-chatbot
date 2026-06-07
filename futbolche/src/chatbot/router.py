@@ -19,7 +19,7 @@ from utils.logger import log_command
 
 CATEGORIES = {
     "Клубове": ["add_club", "list_clubs", "update_club", "delete_club"],
-    "Играчи": ["add_player", "list_players", "list_all_players", "update_player_position", "update_player_number", "update_player_status", "delete_player", "transfer_player"],
+    "Играчи": ["add_player", "list_players", "list_all_players", "update_player_position", "update_player_number", "update_player_status", "delete_player", "transfer_player", "show_transfers_player", "show_transfers_club"],
     "Статистика": ["club_statistics", "player_statistics", "player_metrics"],
     "Мачове": ["record_match", "show_match", "record_event", "get_fixtures", "show_round", "save_result", "add_goal", "add_card", "select_match", "show_events"],
     "Лиги": ["create_league", "add_club_to_league", "remove_club_from_league", "get_league_teams", "generate_round_robin", "get_standings", "get_fixtures"],
@@ -258,9 +258,28 @@ def _route(intent: str, params: Optional[Dict[str, str]]) -> str:
             return "Формат: покажи класиране [league_identifier]"
         return leagues.get_standings(params['league_identifier'])
 
+    if intent == 'show_transfers_player':
+        if not params or 'player_identifier' not in params:
+            return "Недостатъчни параметри. Формат: покажи трансфери на играч [player_identifier]"
+        return transfers.list_transfers_by_player(params['player_identifier'])
+
+    if intent == 'show_transfers_club':
+        if not params or 'club_identifier' not in params:
+            return "Недостатъчни параметри. Формат: покажи трансфери на клуб [club_identifier]"
+        return transfers.list_transfers_by_club(params['club_identifier'])
+
     if intent == 'transfer_player':
-        if not params or 'player_identifier' not in params or 'club_identifier' not in params:
-            return "Недостатъчни параметри. Формат: трансферирай играч [player_identifier] в клуб [club_identifier]"
-        return transfers.transfer_player(params['player_identifier'], params['club_identifier'])
+        if not params or 'player_identifier' not in params:
+            return "Недостатъчни параметри. Формат: трансфер [player_identifier] от [from_club] в [to_club_identifier] [дата]"
+        to_club = params.get('to_club_identifier') or params.get('club_identifier')
+        if not to_club:
+            return "Недостатъчни параметри. Формат: трансфер [player_identifier] от [from_club] в [to_club_identifier] [дата]"
+        return transfers.transfer_player(
+            params['player_identifier'],
+            to_club,
+            from_club_identifier=params.get('from_club'),
+            transfer_date=params.get('transfer_date'),
+            fee=params.get('fee')
+        )
 
     return "Не разбирам командата. Напишете 'помощ'."

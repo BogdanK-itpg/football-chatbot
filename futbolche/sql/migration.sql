@@ -39,3 +39,24 @@ ALTER TABLE league_teams ADD COLUMN joined_at TEXT NOT NULL DEFAULT (datetime('n
 -- Add unique constraint on matches to prevent duplicates
 CREATE UNIQUE INDEX IF NOT EXISTS idx_matches_league_round_teams
     ON matches(league_id, round_no, home_team_id, away_team_id);
+
+-- =====================================
+-- Migration: add transfers table
+-- =====================================
+CREATE TABLE IF NOT EXISTS transfers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    player_id INTEGER NOT NULL,
+    from_club_id INTEGER DEFAULT NULL,
+    to_club_id INTEGER NOT NULL,
+    transfer_date TEXT NOT NULL,
+    fee REAL DEFAULT NULL,
+    note TEXT DEFAULT NULL,
+    FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE,
+    FOREIGN KEY (from_club_id) REFERENCES clubs(id) ON DELETE SET NULL,
+    FOREIGN KEY (to_club_id) REFERENCES clubs(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_transfers_player_id ON transfers(player_id);
+CREATE INDEX IF NOT EXISTS idx_transfers_from_club_id ON transfers(from_club_id);
+CREATE INDEX IF NOT EXISTS idx_transfers_to_club_id ON transfers(to_club_id);
+CREATE INDEX IF NOT EXISTS idx_transfers_transfer_date ON transfers(transfer_date);

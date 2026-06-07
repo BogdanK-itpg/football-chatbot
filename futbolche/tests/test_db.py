@@ -153,20 +153,14 @@ class TestDatabaseOperations(unittest.TestCase):
         self.assertIsNone(result, "Should fail due to unique constraint")
     
     def test_database_cascade_delete(self):
-        """Test that cascade delete works for foreign keys"""
-        # Get initial player count
-        initial_players = execute_query("SELECT COUNT(*) as count FROM players", fetch=True)
-        initial_count = initial_players[0]['count']
-        
-        # Delete a club
+        """Test that foreign key SET NULL works when club is deleted"""
         execute_query("DELETE FROM clubs WHERE name = ?", ("Левски София",), fetch=False)
-        
-        # Check that players were also deleted
-        final_players = execute_query("SELECT COUNT(*) as count FROM players", fetch=True)
-        final_count = final_players[0]['count']
-        
-        # Should have fewer players due to cascade delete
-        self.assertLess(final_count, initial_count, "Player count should decrease after club deletion")
+        orphaned = execute_query(
+            "SELECT COUNT(*) as count FROM players WHERE club_id IS NULL",
+            fetch=True
+        )
+        self.assertGreater(orphaned[0]['count'], 0,
+                           "Players should have club_id set to NULL after club deletion")
     
     def test_database_schema_validation(self):
         """Test that database schema is correct"""

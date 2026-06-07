@@ -1,6 +1,6 @@
-"""Validation functions for match events."""
+"""Validation functions for match events and transfers."""
 
-from repositories import matches_repo, players_repo, events_repo, clubs_repo
+from repositories import matches_repo, players_repo, events_repo, clubs_repo, transfers_repo
 
 
 def validate_minute(minute_str) -> tuple:
@@ -67,6 +67,57 @@ def validate_card_allowed(player_id: int, match_id: int, card_type: str) -> tupl
     if card_type == 'R' and cards['yellow'] >= 1:
         return True, ""  # Second yellow converted to red is valid
     return True, ""
+
+
+def validate_transfer_date(date_str: str) -> tuple:
+    """Returns (is_valid: bool, error_message: str)."""
+    if not date_str:
+        return False, "Датата на трансфер е задължителна."
+    try:
+        from datetime import datetime
+        parsed = datetime.strptime(date_str.strip(), '%Y-%m-%d').date()
+        return True, ""
+    except ValueError:
+        return False, "Невалидна дата. Използвайте формат YYYY-MM-DD."
+
+
+def validate_transfer_fee(fee) -> tuple:
+    """Returns (is_valid: bool, error_message: str)."""
+    if fee is None or fee == '':
+        return True, ""
+    try:
+        val = float(fee)
+        if val < 0:
+            return False, "Таксата не може да бъде отрицателна."
+        return True, ""
+    except (ValueError, TypeError):
+        return False, "Невалидна сума. Таксата трябва да бъде число."
+
+
+def validate_from_club(player_club_id, from_club_identifier: str) -> tuple:
+    """Returns (is_valid: bool, error_message: str).
+    Checks that the player's current club matches the claimed from_club.
+    Handles free agent keywords when player_club_id is None.
+    """
+    FREE_AGENT_KEYWORDS = {"none", "free", "няма", "свободен", "без клуб"}
+    is_free_agent_claim = from_club_identifier is None or str(from_club_identifier).strip().lower() in FREE_AGENT_KEYWORDS
+
+    if player_club_id is None:
+        if not is_free_agent_claim:
+            return False, "Играчът е свободен агент. Посочете 'няма' или 'free' като текущ клуб."
+        return True, ""
+    else:
+        if is_free_agent_claim:
+            return False, "Играчът не е свободен агент. Посочете правилния текущ клуб."
+        if str(from_club_identifier).isdigit():
+            club = clubs_repo.get_by_id(int(from_club_identifier))
+        else:
+            club = clubs_repo.get_by_name(from_club_identifier)
+        if not club:
+            return False, "Клубът не съществува."
+        if player_club_id != club['id']:
+            return False, "Играчът не играе в посочения клуб."
+        return True, ""
 
 
 def validate_player_belongs_to_club(player_id: int, club_identifier: str) -> tuple:

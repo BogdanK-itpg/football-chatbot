@@ -219,8 +219,38 @@
       "examples": ["покажи метрики на играч [player_identifier]"]
     },
     {
+      "tag": "show_transfers_club",
+      "patterns": [
+        "покажи трансфери на клуб [club_identifier]",
+        "трансфери на клуб [club_identifier]",
+        "история на трансфери [club_identifier]"
+      ],
+      "responses": ["Ето трансферите на клуба:"],
+      "examples": ["покажи трансфери на клуб [club_identifier]"]
+    },
+    {
+      "tag": "show_transfers_player",
+      "patterns": [
+        "покажи трансфери на играч [player_identifier]",
+        "покажи трансфери на [player_identifier]",
+        "трансфери на играч [player_identifier]",
+        "история на трансфери [player_identifier]"
+      ],
+      "responses": ["Ето трансферите на играча:"],
+      "examples": ["покажи трансфери на играч [player_identifier]"]
+    },
+    {
       "tag": "transfer_player",
       "patterns": [
+        "трансфер [player_identifier] от [from_club] в [to_club_identifier] [transfer_date] [fee]",
+        "трансфер [player_identifier] от [from_club] в [to_club_identifier] [transfer_date]",
+        "трансфер [player_identifier] от [from_club] в [to_club_identifier]",
+        "трансферирай играч [player_identifier] от [from_club] в клуб [to_club_identifier]",
+        "трансферирай играч [player_identifier] от [from_club] в [to_club_identifier]",
+        "премести играч [player_identifier] от [from_club] в клуб [to_club_identifier]",
+        "премести играч [player_identifier] от [from_club] в [to_club_identifier]",
+        "прехвърли играч [player_identifier] от [from_club] в клуб [to_club_identifier]",
+        "прехвърли играч [player_identifier] от [from_club] в [to_club_identifier]",
         "трансферирай играч [player_identifier] в клуб [club_identifier]",
         "трансферирай играч [player_identifier] в [club_identifier]",
         "премести играч [player_identifier] в клуб [club_identifier]",
@@ -230,7 +260,7 @@
         "трансфер [player_identifier] -> [club_identifier]"
       ],
       "responses": ["Играчът беше трансфериран."],
-      "examples": ["трансферирай играч [player_identifier] в клуб [club_identifier]", "премести играч [player_identifier] в [club_identifier]"]
+      "examples": ["трансфер [player_identifier] от [from_club] в [to_club_identifier]", "трансферирай играч [player_identifier] в клуб [club_identifier]"]
     },
     {
       "tag": "select_match",

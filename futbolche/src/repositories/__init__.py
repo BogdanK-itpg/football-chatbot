@@ -1,0 +1,1 @@
+from . import clubs_repo, players_repo, matches_repo, events_repo, leagues_repo, transfers_repo

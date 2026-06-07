@@ -3,7 +3,7 @@ from db import fetch_one, fetch_all, execute
 
 def get_by_id(player_id: int):
     return fetch_one(
-        "SELECT p.*, c.name as club_name FROM players p JOIN clubs c ON p.club_id = c.id WHERE p.id = ?",
+        "SELECT p.*, c.name as club_name FROM players p LEFT JOIN clubs c ON p.club_id = c.id WHERE p.id = ?",
         (player_id,)
     )
 
@@ -22,14 +22,14 @@ def get_by_name(name: str):
 
 def get_by_club(club_id: int):
     return fetch_all(
-        "SELECT p.*, c.name as club_name FROM players p JOIN clubs c ON p.club_id = c.id WHERE p.club_id = ? ORDER BY p.number",
+        "SELECT p.*, c.name as club_name FROM players p LEFT JOIN clubs c ON p.club_id = c.id WHERE p.club_id = ? ORDER BY p.number",
         (club_id,)
     )
 
 
 def get_all():
     return fetch_all(
-        "SELECT p.*, c.name as club_name FROM players p JOIN clubs c ON p.club_id = c.id ORDER BY c.name, p.number"
+        "SELECT p.*, c.name as club_name FROM players p LEFT JOIN clubs c ON p.club_id = c.id ORDER BY c.name, p.number"
     )
 
 
@@ -89,11 +89,12 @@ def get_used_numbers(club_id: int):
     return {r['number'] for r in rows}
 
 
-def update_club_and_number(player_id: int, club_id: int, number: int):
+def update_club_and_number(player_id: int, club_id: int, number: int, conn=None):
     """Update a player's club and shirt number."""
     return execute(
         "UPDATE players SET club_id = ?, number = ? WHERE id = ?",
-        (club_id, number, player_id)
+        (club_id, number, player_id),
+        conn=conn
     )
 
 

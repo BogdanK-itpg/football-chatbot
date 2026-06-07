@@ -252,36 +252,60 @@ Realistic, end-to-end usage examples demonstrating the chatbot's capabilities in
 
 ## Scenario 4: Transfer Window
 
-**Context:** Mid-season transfer window. Player Петър Иванов (defender) is being transferred from Левски София to ЦСКА София. However, ЦСКА already has a player with jersey number 5, so the system will reassign a new number.
+**Context:** Mid-season transfer window with multiple transfer scenarios: a standard club-to-club transfer, a rejected wrong-club attempt, a free agent signing, and transfer history queries.
 
 ### Prerequisites
-- Петър Иванов currently plays for Левски София, wears #5
-- ЦСКА София already has a player wearing #5
+- Иван Иванов (GK) currently plays for Левски София (#1)
+- Петър Петров (DF) currently plays for Левски София (#4)
+- Кристиян Стоянов (FW) currently plays for ЦСКА София (#11)
 
 ### Session Transcript
 
 ```
->> трансферирай играч Петър Иванов в клуб ЦСКА София
-Играчът 'Петър Иванов' беше трансфериран в клуб с ID 2. Присвоен нов номер: #12.
+>> помощ
+Налични команди:
+...
+- трансферирай играч [player_identifier] от [from_club] в [to_club_identifier]
+- трансферирай играч [player_identifier] в [to_club_identifier] от [from_club]
+- покажи трансфери на играч [player_identifier]
+- покажи трансфери на клуб [club_identifier]
+...
 
->> покажи играчи на клуб Левски София
-Ето списък с играчи:
-1. #1 Иван Петров (GK)
-2. #4 Георги Димитров (DF)
-3. #8 Мария Каракашанова (MF)
-4. #9 Мартин Георгиев (FW)
-5. #10 Стефан Стоянов (MF)
-6. #11 Александра Николова (FW)
-[Note: Петър Иванов (#5) is no longer listed]
+# --- Example 1: Standard transfer with от...в syntax ---
+>> трансферирай играч Иван Иванов от Левски София в ЦСКА София
+Играч 'Иван Иванов' беше трансфериран в клуб 'ЦСКА София'.
 
->> покажи играчи на клуб ЦСКА София
-Ето списък с играчи:
-1. #1 ... (existing players)
-2. #5 ... (existing player who already had #5)
-3. #12 Петър Иванов (DF)  [Newly transferred with reassigned number]
+# --- Example 2: Wrong club rejection ---
+>> трансферирай играч Иван Иванов от Ботев Пловдив в Лудогорец Разград
+Играчът не играе в посочения клуб.
+
+# --- Example 3: Free agent signing ---
+# First, make a player free agent by removing them from their club
+# (simulated: a player with NULL club_id exists)
+>> трансферирай играч Кристиян Стоянов от няма в Ботев Пловдив
+Играч 'Кристиян Стоянов' беше трансфериран в клуб 'Ботев Пловдив'.
+
+# --- Example 4: Automatic number reassignment ---
+>> трансферирай играч Петър Петров от Левски София в ЦСКА София
+Играч 'Петър Петров' беше трансфериран в клуб 'ЦСКА София'. Присвоен нов номер: #12.
+
+# --- Example 5: Transfer history for a player ---
+>> покажи трансфери на играч Иван Иванов
+Трансфери на Иван Иванов:
+  2026-01-15: Левски София → ЦСКА София
+
+# --- Example 6: Transfer history for a club ---
+>> покажи трансфери на клуб ЦСКА София
+Трансфери на клуб 'ЦСКА София':
+  2026-01-15: Иван Иванов Левски София → ЦСКА София (пристига)
 ```
 
-**Outcome:** Transfer completed successfully. The system automatically found that #5 was taken in the destination club and assigned the smallest available number (#12). The transaction was atomic - either both the club update and number reassignment succeed, or both roll back.
+**Outcome:**
+- Standard transfers with explicit `от [from] в [to]` syntax work correctly
+- Wrong-club claims are rejected with a clear error message
+- Free agents can be signed using `няма`/`free`/`свободен` as the from-club
+- Jersey number conflicts are resolved automatically (smallest available number)
+- Transfer history is queryable by player or by club, showing incoming and outgoing moves
 
 ---
 
