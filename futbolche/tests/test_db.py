@@ -56,11 +56,11 @@ class TestDatabaseOperations(unittest.TestCase):
         """Test that initialize_database populates sample data"""
         # Get club count
         clubs = execute_query("SELECT COUNT(*) as count FROM clubs", fetch=True)
-        self.assertEqual(clubs[0]['count'], 8, "Should have 8 sample clubs")
+        self.assertEqual(clubs[0]['count'], 18, "Should have 18 sample clubs")
         
         # Get player count
         players = execute_query("SELECT COUNT(*) as count FROM players", fetch=True)
-        self.assertEqual(players[0]['count'], 38, "Should have 38 sample players")
+        self.assertEqual(players[0]['count'], 90, "Should have 90 sample players")
         
         # Check specific clubs
         levski = execute_query("SELECT * FROM clubs WHERE name = 'Левски София'", fetch=True)
@@ -93,7 +93,7 @@ class TestDatabaseOperations(unittest.TestCase):
         result = execute_query("SELECT COUNT(*) as count FROM clubs", fetch=True)
         self.assertIsNotNone(result, "Should return results")
         self.assertEqual(len(result), 1, "Should return one row")
-        self.assertEqual(result[0]['count'], 8, "Should have 8 clubs")
+        self.assertEqual(result[0]['count'], 18, "Should have 18 clubs")
     
     def test_execute_query_fetch_false(self):
         """Test execute_query with fetch=False"""

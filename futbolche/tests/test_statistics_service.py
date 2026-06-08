@@ -25,8 +25,8 @@ class TestStatisticsService(unittest.TestCase):
         stats = get_club_statistics('Левски София')
         self.assertIsNotNone(stats)
         self.assertIn('played', stats)
-        # Based on sample matches, Levski had 2 matches in sample data
-        self.assertEqual(stats['played'], 2)
+        # Based on sample matches, Levski has 3 matches in sample data (vs CSKA, vs Botev, vs Slavia)
+        self.assertEqual(stats['played'], 3)
 
     def test_get_player_statistics_by_name(self):
         stats = get_player_statistics('Иван Иванов')

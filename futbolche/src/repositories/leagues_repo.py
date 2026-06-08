@@ -48,6 +48,10 @@ def add_team(league_id: int, club_id: int):
     )
 
 
+def get_all():
+    return fetch_all("SELECT * FROM leagues ORDER BY name")
+
+
 def remove_team(league_id: int, club_id: int):
     return execute(
         "DELETE FROM league_teams WHERE league_id = ? AND club_id = ?",

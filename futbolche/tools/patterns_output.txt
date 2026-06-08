@@ -1,0 +1,11 @@
+PREDICT_MATCH patterns:
+  'Предикт [team1] срещу [team2]'
+    regex: ^предикт\s+(?P<team1>.+?)\s+срещу\s+(?P<team2>.+?)$
+  'Предположи [team1] срещу [team2]'
+    regex: ^предположи\s+(?P<team1>.+?)\s+срещу\s+(?P<team2>.+?)$
+  'Прогноза [team1] срещу [team2]'
+    regex: ^прогноза\s+(?P<team1>.+?)\s+срещу\s+(?P<team2>.+?)$
+  'Кажи [team1] срещу [team2]'
+    regex: ^кажи\s+(?P<team1>.+?)\s+срещу\s+(?P<team2>.+?)$
+parse_input('Prediction Levski vs Ludogorets') -> intent=unknown params=None
+parse_input('Прогноза Левски срещу Лудогорец') -> intent=predict_match params={'team1': 'Левски', 'team2': 'Лудогорец'}

@@ -15,6 +15,7 @@ from handlers.handler_matches import (
     handle_show_events,
 )
 from handlers.handler_standings import handle_show_standings
+from handlers.handler_ai import handle_predict_match
 from utils.logger import log_command
 
 
@@ -22,7 +23,7 @@ CATEGORIES = {
     "Клубове": ["add_club", "list_clubs", "update_club", "delete_club"],
     "Играчи": ["add_player", "list_players", "list_all_players", "update_player_position", "update_player_number", "update_player_status", "delete_player", "transfer_player", "show_transfers_player", "show_transfers_club"],
     "Статистика": ["club_statistics", "player_statistics", "player_metrics"],
-    "Мачове": ["record_match", "show_match", "record_event", "get_fixtures", "show_round", "save_result", "add_goal", "add_card", "select_match", "show_events"],
+    "Мачове": ["record_match", "show_match", "record_event", "get_fixtures", "show_round", "save_result", "add_goal", "add_card", "select_match", "show_events", "predict_match"],
     "Лиги": ["create_league", "add_club_to_league", "remove_club_from_league", "get_league_teams", "generate_round_robin", "get_standings", "get_fixtures"],
 }
 
@@ -138,6 +139,9 @@ def _route(intent: str, params: Optional[Dict[str, str]]) -> str:
         if not params or 'league_identifier' not in params:
             return "Формат: генерирай кръгове за лига [лига]"
         return leagues.generate_round_robin(params['league_identifier'])
+
+    if intent == 'predict_match':
+        return handle_predict_match(params or {})
 
     if intent == 'get_fixtures':
         if not params or 'league_identifier' not in params:
