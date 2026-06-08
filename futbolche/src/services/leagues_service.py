@@ -119,53 +119,18 @@ def get_standings(league_identifier):
     lid = leagues_repo.resolve_id(league_identifier)
     if not lid:
         return f"Няма лига с име/ID '{league_identifier}'."
-    rows = matches_repo.get_by_league(lid)
-    if not rows:
-        return "Няма мачове в тази лига."
-    table = {}
-
-    def ensure(team_name):
-        if team_name not in table:
-            table[team_name] = {'P': 0, 'W': 0, 'D': 0, 'L': 0, 'GF': 0, 'GA': 0, 'GD': 0, 'Pts': 0}
-
-    for r in rows:
-        home = r['home_name']
-        away = r['away_name']
-        ensure(home)
-        ensure(away)
-        hg = r['home_goals'] if r['home_goals'] is not None else 0
-        ag = r['away_goals'] if r['away_goals'] is not None else 0
-        table[home]['P'] += 1
-        table[away]['P'] += 1
-        table[home]['GF'] += hg
-        table[home]['GA'] += ag
-        table[away]['GF'] += ag
-        table[away]['GA'] += hg
-        if hg > ag:
-            table[home]['W'] += 1
-            table[away]['L'] += 1
-            table[home]['Pts'] += 3
-        elif hg < ag:
-            table[away]['W'] += 1
-            table[home]['L'] += 1
-            table[away]['Pts'] += 3
-        else:
-            table[home]['D'] += 1
-            table[away]['D'] += 1
-            table[home]['Pts'] += 1
-            table[away]['Pts'] += 1
-
-    out = []
-    for team, stats in table.items():
-        stats['GD'] = stats['GF'] - stats['GA']
-        out.append((team, stats))
-    out.sort(key=lambda x: (-x[1]['Pts'], -x[1]['GD'], -x[1]['GF'], x[0]))
-
+    from services.standings_service import calculate_standings
+    league = leagues_repo.get_by_id(lid)
+    if not league:
+        return f"Няма лига с ID '{lid}'."
+    table = calculate_standings(league['name'], league['season'])
+    if not table:
+        return "Няма отбори в тази лига."
     lines = []
-    for pos, (team, s) in enumerate(out, start=1):
+    for row in table:
         lines.append(
-            f"{pos}. {team} | P:{s['P']} W:{s['W']} D:{s['D']} L:{s['L']} "
-            f"GF:{s['GF']} GA:{s['GA']} GD:{s['GD']} Pts:{s['Pts']}"
+            f"{row['position']}. {row['team']} | P:{row['mp']} W:{row['w']} D:{row['d']} L:{row['l']} "
+            f"GF:{row['gf']} GA:{row['ga']} GD:{row['gd']} Pts:{row['pts']}"
         )
     return "\n".join(lines)
 

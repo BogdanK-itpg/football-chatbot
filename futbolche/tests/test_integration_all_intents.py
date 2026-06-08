@@ -223,6 +223,20 @@ class TestAllIntentsIntegration(unittest.TestCase):
         intent, params = parse_input_wrapper("покажи класиране Нова Лига")
         self.assertEqual(intent, "get_standings")
 
+    def test_nlu_get_standings_multiword_league_with_season(self):
+        """Test get_standings with multi-word league name and season keyword"""
+        intent, params = parse_input_wrapper("покажи класиране Тестова Лига сезон 2025")
+        self.assertEqual(intent, "get_standings")
+        self.assertIn("season", params)
+        self.assertEqual(params["season"], "2025")
+
+    def test_nlu_get_standings_multiword_league_bare_season(self):
+        """Test get_standings with multi-word league name and bare season (regression)"""
+        intent, params = parse_input_wrapper("покажи класиране Тестова Лига 2025")
+        self.assertEqual(intent, "get_standings")
+        self.assertIn("season", params)
+        self.assertEqual(params["season"], "2025")
+
     def test_nlu_record_event_patterns(self):
         """Test record_event patterns"""
         # Note: event_type parameter is not extracted by the NLU pattern
@@ -411,6 +425,20 @@ class TestAllIntentsIntegration(unittest.TestCase):
             response = parse_and_handle("покажи класиране Тестова Лига")
             self.assertIsInstance(response, str)
 
+    def test_e2e_get_standings_with_season_keyword(self):
+        """Test get_standings with multi-word league + сезон keyword"""
+        if self.test_league_id:
+            response = parse_and_handle("покажи класиране Тестова Лига сезон 2025")
+            self.assertIsInstance(response, str)
+            self.assertNotIn("няма намерена лига", response.lower())
+
+    def test_e2e_get_standings_bare_season(self):
+        """Test get_standings with multi-word league + bare season (regression)"""
+        if self.test_league_id:
+            response = parse_and_handle("покажи класиране Тестова Лига 2025")
+            self.assertIsInstance(response, str)
+            self.assertNotIn("няма намерена лига", response.lower())
+
     def test_e2e_record_event(self):
         """Test record_event end-to-end"""
         if self.test_match_id:
@@ -521,7 +549,7 @@ class TestAllIntentsIntegration(unittest.TestCase):
     def test_get_standings_nonexistent_league(self):
         """Test get_standings with non-existent league"""
         response = parse_and_handle("покажи класиране Несъществуваща Лига")
-        self.assertIn("няма лига", response.lower())
+        self.assertIn("няма намерена лига", response.lower())
 
     def test_create_league_empty_name(self):
         """Test create_league with empty name"""

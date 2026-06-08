@@ -4,6 +4,5 @@ from services.leagues_service import (
     remove_club_from_league,
     get_league_teams,
     generate_round_robin,
-    get_standings,
     get_fixtures,
 )

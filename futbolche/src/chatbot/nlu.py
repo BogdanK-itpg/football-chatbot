@@ -35,7 +35,10 @@ def _pattern_to_regex(pattern: str) -> Tuple[re.Pattern, list]:
         else:
             name = p
             groups.append(name)
-            regex_parts.append(f"(?P<{name}>.+?)")
+            if name == 'season':
+                regex_parts.append(r"(?P<season>\d{4}(?:/\d{2,4})?(?:-\d{2,4})?)")
+            else:
+                regex_parts.append(f"(?P<{name}>.+?)")
 
     # Build the regex with flexible spacing:
     # - Between word-text and placeholders: require at least one space (\s+)
@@ -66,15 +69,21 @@ def parse_input(user_input: str) -> Tuple[str, Optional[Dict[str, str]]]:
     If no intent found returns ("unknown", None).
     """
     text = user_input.strip()
+    lower_text = text.lower()
     intents = _load_intents()
 
     for intent in intents:
         tag = intent.get('tag')
         for pattern in intent.get('patterns', []):
             regex, groups = _pattern_to_regex(pattern)
-            m = regex.match(text.lower())
+            m = regex.match(lower_text)
             if m:
-                params = {k: v.strip() for k, v in m.groupdict().items() if v}
+                params = {}
+                for k, v in m.groupdict().items():
+                    if v:
+                        start, end = m.span(k)
+                        original = text[start:end].strip()
+                        params[k] = original
                 return tag, params if params else None
 
     return 'unknown', None

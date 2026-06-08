@@ -74,8 +74,12 @@
     {
       "tag": "get_standings",
       "patterns": [
+        "покажи класиране [league_identifier] за сезон [season]",
+        "покажи класиране [league_identifier] сезон [season]",
         "покажи класиране [league_identifier] [season]",
         "покажи класиране [league_identifier]",
+        "класиране на лига [league_identifier] за сезон [season]",
+        "класиране на лига [league_identifier] сезон [season]",
         "класиране на лига [league_identifier] [season]",
         "класиране на лига [league_identifier]"
       ],

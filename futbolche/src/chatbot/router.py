@@ -14,6 +14,7 @@ from handlers.handler_matches import (
     handle_add_card,
     handle_show_events,
 )
+from handlers.handler_standings import handle_show_standings
 from utils.logger import log_command
 
 
@@ -254,9 +255,7 @@ def _route(intent: str, params: Optional[Dict[str, str]]) -> str:
         )
 
     if intent == 'get_standings':
-        if not params or 'league_identifier' not in params:
-            return "Формат: покажи класиране [league_identifier]"
-        return leagues.get_standings(params['league_identifier'])
+        return handle_show_standings(params or {})
 
     if intent == 'show_transfers_player':
         if not params or 'player_identifier' not in params:
