@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import scrolledtext, messagebox
+from tkinter import scrolledtext, ttk
 import sys
 import os
 
@@ -8,13 +8,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from chatbot.chatbot import parse_input as parse_input_nlu, handle_intent as handle_intent_router
 from db import initialize_database
 from utils.logger import log_command
+from commands import CommandBuilderPanel
 
 
 class FootballChatbotGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Football League Chatbot")
-        self.root.geometry("900x650")
+        self.root.geometry("1280x700")
         self.root.configure(bg="#1e1e1e")
 
         initialize_database()
@@ -23,7 +24,13 @@ class FootballChatbotGUI:
         self._add_welcome_message()
 
     def _setup_ui(self):
-        title_frame = tk.Frame(self.root, bg="#2d2d2d", height=50)
+        main_pane = ttk.PanedWindow(self.root, orient=tk.HORIZONTAL)
+        main_pane.pack(fill=tk.BOTH, expand=True)
+
+        left_frame = tk.Frame(main_pane, bg="#1e1e1e")
+        main_pane.add(left_frame, weight=2)
+
+        title_frame = tk.Frame(left_frame, bg="#2d2d2d", height=50)
         title_frame.pack(fill=tk.X)
         title_frame.pack_propagate(False)
 
@@ -37,7 +44,7 @@ class FootballChatbotGUI:
         title_label.pack(pady=12)
 
         self.chat_display = scrolledtext.ScrolledText(
-            self.root,
+            left_frame,
             wrap=tk.WORD,
             bg="#252526",
             fg="#d4d4d4",
@@ -47,7 +54,7 @@ class FootballChatbotGUI:
         )
         self.chat_display.pack(fill=tk.BOTH, expand=True, padx=10, pady=(10, 5))
 
-        self.input_frame = tk.Frame(self.root, bg="#1e1e1e")
+        self.input_frame = tk.Frame(left_frame, bg="#1e1e1e")
         self.input_frame.pack(fill=tk.X, padx=10, pady=(5, 10))
 
         self.input_entry = tk.Entry(
@@ -75,7 +82,7 @@ class FootballChatbotGUI:
         )
         self.send_button.pack(side=tk.LEFT, padx=(10, 0))
 
-        quick_frame = tk.Frame(self.root, bg="#1e1e1e", height=40)
+        quick_frame = tk.Frame(left_frame, bg="#1e1e1e", height=40)
         quick_frame.pack(fill=tk.X, padx=10, pady=(0, 10))
         quick_frame.pack_propagate(False)
 
@@ -100,6 +107,12 @@ class FootballChatbotGUI:
                 cursor="hand2"
             )
             btn.pack(side=tk.LEFT, padx=2)
+
+        right_frame = tk.Frame(main_pane, bg="#2d2d2d")
+        main_pane.add(right_frame, weight=1)
+
+        self._builder = CommandBuilderPanel(right_frame, on_execute=self._on_builder_execute)
+        self._builder.pack(fill=tk.BOTH, expand=True)
 
     def _add_welcome_message(self):
         welcome = "Добре дошли във Football League Chatbot!\nНапишете 'помощ' за списък с команди."
@@ -129,6 +142,14 @@ class FootballChatbotGUI:
 
         self._add_message("You", input_text)
         self._process_input(input_text)
+
+    def _on_builder_execute(self, intent_tag: str, params: dict):
+        response = handle_intent_router(intent_tag, params, raw_input=f"[builder] {intent_tag}")
+        self._add_message("You", f"[Команден строител] {intent_tag}")
+        if response == "exit":
+            self.root.quit()
+            return
+        self._add_message("Bot", response)
 
     def _process_input(self, user_input):
         try:
