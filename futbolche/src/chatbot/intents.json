@@ -307,7 +307,9 @@
       "patterns": [
         "запиши мач [home_team] срещу [away_team] дата [match_date] резултат [home_goals]-[away_goals]",
         "добави мач [home_team] vs [away_team] на [match_date] резултат [home_goals]-[away_goals]",
-        "регистрирай мач [home_team] - [away_team] [home_goals]:[away_goals] на [match_date]"
+        "регистрирай мач [home_team] - [away_team] [home_goals]:[away_goals] на [match_date]",
+        "запиши мач [home_team] срещу [away_team] дата [match_date] резултат [home_goals]-[away_goals] лига [league] кръг [round_no]",
+        "добави мач [home_team] vs [away_team] на [match_date] резултат [home_goals]-[away_goals] лига [league] кръг [round_no]"
       ],
       "responses": ["Мачът беше записан."],
       "examples": ["запиши мач [home_team] срещу [away_team] дата [match_date] резултат [home_goals]-[away_goals]"]
@@ -336,7 +338,8 @@
         "запиши асист [player_identifier] в мач [match_id] минута [minute]",
         "запиши жълт картон [player_identifier] в мач [match_id] минута [minute]",
         "запиши червен картон [player_identifier] в мач [match_id] минута [minute]",
-        "запиши поява [player_identifier] в мач [match_id]"
+        "запиши поява [player_identifier] в мач [match_id]",
+        "запиши [event_type] [player_identifier] в мач [match_id] минута [minute]"
       ],
       "responses": ["Събитието беше записано."],
       "examples": ["запиши гол [player_identifier] в мач [match_id] минута [minute]"]

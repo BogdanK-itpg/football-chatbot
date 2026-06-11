@@ -4,6 +4,7 @@ from tkinter import ttk, messagebox
 from typing import Optional, Dict, List, Callable, Any
 
 from .command_tree import CommandNode, CommandTreeBuilder
+from .data_provider import get_options_for_param
 
 
 
@@ -146,6 +147,8 @@ class CommandBuilderPanel(ttk.Frame):
             lbl = ttk.Label(self._scroll_frame, text=label_text, font=("Arial", 10))
             lbl.pack(anchor="w", padx=10, pady=(8, 2))
 
+            options_map = {}
+
             if ptype == "ENUM" and enum_values:
                 var = tk.StringVar()
                 widget = ttk.Combobox(self._scroll_frame, textvariable=var,
@@ -167,12 +170,23 @@ class CommandBuilderPanel(ttk.Frame):
                 widget = ttk.Checkbutton(self._scroll_frame, variable=var)
                 widget.pack(anchor="w", padx=10, pady=(0, 2))
             else:
+                db_options = get_options_for_param(pname)
                 var = tk.StringVar()
-                placeholder = meta.get("placeholder", "")
-                widget = tk.Entry(self._scroll_frame, textvariable=var, font=("Arial", 10))
-                widget.pack(fill=tk.X, padx=10, pady=(0, 2))
+                if db_options:
+                    for display, value in db_options:
+                        options_map[display] = value
+                    display_values = list(options_map.keys())
+                    widget = ttk.Combobox(self._scroll_frame, textvariable=var,
+                                          values=display_values, state="normal")
+                    widget.pack(fill=tk.X, padx=10, pady=(0, 2))
+                    if display_values:
+                        var.set(display_values[0])
+                    widget.bind("<<ComboboxSelected>>", lambda *_: self._update_preview())
+                else:
+                    widget = tk.Entry(self._scroll_frame, textvariable=var, font=("Arial", 10))
+                    widget.pack(fill=tk.X, padx=10, pady=(0, 2))
 
-            self._param_widgets[pname] = {"var": var, "widget": widget, "ptype": ptype}
+            self._param_widgets[pname] = {"var": var, "widget": widget, "ptype": ptype, "options_map": options_map}
             var.trace_add("write", lambda *_: self._update_preview())
 
     def _get_var(self, field: _FieldWidget) -> Any:
@@ -190,11 +204,16 @@ class CommandBuilderPanel(ttk.Frame):
             raw = var.get()
             if raw is None or (isinstance(raw, str) and not raw.strip()):
                 continue
-            val = str(raw).strip()
+            display_val = str(raw).strip()
             ptype = self._get_ptype(field)
             if ptype == "BOOLEAN":
-                val = str(var.get()).lower()
-            result[pname] = val
+                result[pname] = str(var.get()).lower()
+            else:
+                options_map = field.get("options_map", {})
+                if options_map and display_val in options_map:
+                    result[pname] = options_map[display_val]
+                else:
+                    result[pname] = display_val
         return result
 
     def _build_intent_dict(self) -> Optional[Dict]:

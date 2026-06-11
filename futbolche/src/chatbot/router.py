@@ -237,7 +237,8 @@ def _route(intent: str, params: Optional[Dict[str, str]]) -> str:
             params.get('match_date'),
             params.get('home_goals'),
             params.get('away_goals'),
-            params.get('league')
+            params.get('league'),
+            params.get('round_no')
         )
 
     if intent == 'show_match':
@@ -251,11 +252,27 @@ def _route(intent: str, params: Optional[Dict[str, str]]) -> str:
     if intent == 'record_event':
         if not params or 'match_id' not in params or 'event_type' not in params:
             return "Недостатъчни параметри. Формат: запиши събитие [event_type] [player_identifier] в мач [match_id] минута [minute]"
+        match_id = params.get('match_id')
+        player_name = params.get('player_identifier')
+        event_type = params.get('event_type')
+        minute = params.get('minute')
+
+        pid = players.get_player_id(player_name)
+        if not pid:
+            return f"Играч '{player_name}' не съществува."
+
+        from repositories import players_repo
+        player = players_repo.get_by_id(pid)
+        if not player or not player.get('club_id'):
+            return "Играчът няма клуб."
+
+        try:
+            match_id = int(match_id)
+        except (ValueError, TypeError):
+            return "ID на мача трябва да бъде цяло число."
+
         return matches.record_event(
-            params.get('match_id'),
-            params.get('player_identifier'),
-            params.get('event_type'),
-            params.get('minute')
+            match_id, pid, player['club_id'], event_type, minute=minute
         )
 
     if intent == 'get_standings':

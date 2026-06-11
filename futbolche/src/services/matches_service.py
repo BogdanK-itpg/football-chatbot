@@ -25,6 +25,16 @@ def record_match(home_team_id, away_team_id, match_date, home_goals=None, away_g
         return "Един от клубовете не съществува."
     if hid == aid:
         return "Двата отбора не могат да бъдат едни и същи."
+    if league_id:
+        resolved_league = leagues_repo.resolve_id(league_id)
+        if not resolved_league:
+            return f"Лига '{league_id}' не съществува."
+        league_id = resolved_league
+    if round_no:
+        try:
+            round_no = int(round_no)
+        except (ValueError, TypeError):
+            return "Номерът на кръга трябва да бъде цяло число."
     try:
         res = matches_repo.create(hid, aid, match_date, home_goals, away_goals, league_id, round_no)
         if res is None:

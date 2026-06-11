@@ -137,9 +137,7 @@ def _generate_param_hint(param_name: str) -> str:
         "player_name": "Име на играч",
         "team_name": "Име на отбор",
         "round_no": "Номер на кръг",
-        "league_name": "Име на лига",
-        "new_status": "Нов статус",
-        "player_identifier": "Име или ID на играч",
+        "league": "Име на лига",
     }
     return hints.get(param_name, f"Въведете {param_name.replace('_', ' ')}")
 
