@@ -42,7 +42,7 @@ futbolche/
 ├── sql/                   # schema.sql, migration.sql
 ├── tests/                 # 118+ tests
 └── docs/README.md         # Full documentation
-
+```
 ---
 
 ## Features
