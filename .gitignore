@@ -17,6 +17,10 @@ venv/
 # Logs
 *.log
 
+# Coverage
+.coverage
+htmlcov/
+
 # IDE
 .idea/
 .vscode/
