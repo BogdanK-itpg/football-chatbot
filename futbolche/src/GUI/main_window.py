@@ -169,6 +169,8 @@ class FootballChatbotGUI:
         self.chat_display.config(state=tk.NORMAL)
 
         if sender == "You":
+            if self.chat_display.index("end-1c") != "1.0":
+                self.chat_display.insert(tk.END, "\n")
             self.chat_display.insert(tk.END, "You: ", "user_tag")
             self.chat_display.insert(tk.END, f"{message}\n")
         else:
