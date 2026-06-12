@@ -1,9 +1,0 @@
-{
-  "intents": [
-    {
-      "tag": "help",
-      "patterns": ["помощ", "help"],
-      "responses": ["Налични команди:"]
-    }
-  ]
-}

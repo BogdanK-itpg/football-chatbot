@@ -103,7 +103,6 @@ futbolche/
 │   │   ├── chatbot.py          # parse_and_handle() — entry point for NLU + routing
 │   │   ├── nlu.py              # Pattern matching engine (_pattern_to_regex)
 │   │   ├── router.py           # Intent routing + logging wrapper
-│   │   ├── handlers_leagues.py # Convenience re-exports for league service functions
 │   │   └── intents.json        # Intent definitions, patterns, examples (28 intents)
 │   ├── services/
 │   │   ├── __init__.py
