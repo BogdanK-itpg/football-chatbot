@@ -188,6 +188,19 @@ def _param_is_optional_in_patterns(param_name: str, patterns: List[str]) -> bool
     return present_count < len(patterns)
 
 
+def _param_is_optional_for_intent(tag: str, param_name: str, patterns: List[str]) -> bool:
+    # Match the actual command behavior rather than relying only on placeholder frequency.
+    explicit_optional_params = {
+        "add_player": {"club_identifier", "birth_date", "nationality", "position", "number", "status"},
+        "record_event": {"event_type", "minute"},
+        "show_events": {"match_id"},
+        "transfer_player": {"from_club", "to_club_identifier", "club_identifier", "transfer_date", "fee"},
+    }
+    if param_name in explicit_optional_params.get(tag, set()):
+        return True
+    return _param_is_optional_in_patterns(param_name, patterns)
+
+
 def build_intent_schema(intent_dict: dict, category: str = "") -> IntentSchema:
     tag = intent_dict.get("tag", "")
     patterns = intent_dict.get("patterns", [])
@@ -199,7 +212,7 @@ def build_intent_schema(intent_dict: dict, category: str = "") -> IntentSchema:
         enum_values = _KNOWN_ENUMS.get(pname.lower(), [])
         if not enum_values and ptype == ParamType.ENUM:
             pass
-        required = not _param_is_optional_in_patterns(pname, patterns)
+        required = not _param_is_optional_for_intent(tag, pname, patterns)
         hint = _generate_param_hint(pname)
         parameters.append(ParameterDef(
             name=pname,
