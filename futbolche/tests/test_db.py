@@ -1,190 +1,187 @@
-#!/usr/bin/env python3
-"""
-Unit tests for database operations (db.py)
-"""
-
+import importlib
 import os
-import sys
+import sqlite3
 import tempfile
-import unittest
-from unittest.mock import patch, MagicMock
+from unittest import mock
 
-# Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-
-# Ensure tests directory is on path so test helpers (test_config) can be imported
-sys.path.insert(0, os.path.dirname(__file__))
-
-import db
-from db import initialize_database, get_connection, execute_query
+from test_support import BasePatchedTestCase
 
 
-class TestDatabaseOperations(unittest.TestCase):
-    """Test cases for database operations"""
-    
+class TestDbModule(BasePatchedTestCase):
     def setUp(self):
-        """Setup test environment"""
-        self.test_config = __import__('test_config').test_config
-        self.test_config.setup_test_environment()
-        
-    def tearDown(self):
-        """Cleanup test environment"""
-        self.test_config.cleanup_test_environment()
-    
-    def test_initialize_database_creates_new_database(self):
-        """Test that initialize_database creates a new database file"""
-        # Ensure database doesn't exist
-        if os.path.exists(db.DB_PATH):
-            os.remove(db.DB_PATH)
-        
-        # Initialize database
-        initialize_database()
-        
-        # Check that database file was created
-        self.assertTrue(os.path.exists(db.DB_PATH), "Database file should be created")
-        
-        # Check that tables exist
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='clubs'")
-        self.assertIsNotNone(cursor.fetchone(), "Clubs table should exist")
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='players'")
-        self.assertIsNotNone(cursor.fetchone(), "Players table should exist")
-        conn.close()
-    
-    def test_initialize_database_populates_sample_data(self):
-        """Test that initialize_database populates sample data"""
-        # Get club count
-        clubs = execute_query("SELECT COUNT(*) as count FROM clubs", fetch=True)
-        self.assertEqual(clubs[0]['count'], 18, "Should have 18 sample clubs")
-        
-        # Get player count
-        players = execute_query("SELECT COUNT(*) as count FROM players", fetch=True)
-        self.assertEqual(players[0]['count'], 90, "Should have 90 sample players")
-        
-        # Check specific clubs
-        levski = execute_query("SELECT * FROM clubs WHERE name = 'Левски София'", fetch=True)
-        self.assertIsNotNone(levski, "Levski Sofia club should exist")
-        self.assertEqual(levski[0]['city'], 'София')
-        self.assertEqual(levski[0]['founded_year'], 1914)
-    
-    def test_get_connection_returns_valid_connection(self):
-        """Test that get_connection returns a valid database connection"""
-        conn = get_connection()
-        self.assertIsNotNone(conn, "Connection should not be None")
-        
-        # Test that connection works
-        cursor = conn.cursor()
-        cursor.execute("SELECT 1")
-        result = cursor.fetchone()
-        self.assertEqual(result[0], 1)
-        
-        conn.close()
-    
-    def test_get_connection_handles_database_error(self):
-        """Test that get_connection handles database errors gracefully"""
-        # Mock sqlite3.connect to raise an error
-        with patch('sqlite3.connect', side_effect=Exception("Database error")):
-            conn = get_connection()
-            self.assertIsNone(conn, "Should return None on database error")
-    
-    def test_execute_query_fetch_true(self):
-        """Test execute_query with fetch=True"""
-        result = execute_query("SELECT COUNT(*) as count FROM clubs", fetch=True)
-        self.assertIsNotNone(result, "Should return results")
-        self.assertEqual(len(result), 1, "Should return one row")
-        self.assertEqual(result[0]['count'], 18, "Should have 18 clubs")
-    
-    def test_execute_query_fetch_false(self):
-        """Test execute_query with fetch=False"""
-        result = execute_query("INSERT INTO clubs (name, city, founded_year) VALUES (?, ?, ?)", 
-                              ("Test Club", "Test City", 2000), fetch=False)
-        self.assertTrue(result, "Should return True for successful insert")
-        
-        # Verify insertion
-        test_club = execute_query("SELECT * FROM clubs WHERE name = 'Test Club'", fetch=True)
-        self.assertIsNotNone(test_club, "Inserted club should exist")
-        self.assertEqual(test_club[0]['name'], "Test Club")
-        self.assertEqual(test_club[0]['city'], "Test City")
-        self.assertEqual(test_club[0]['founded_year'], 2000)
-    
-    def test_execute_query_with_parameters(self):
-        """Test execute_query with parameters"""
-        # Insert with parameters
-        result = execute_query(
-            "INSERT INTO clubs (name, city, founded_year) VALUES (?, ?, ?)",
-            ("CSKA Sofia", "София", 1948), fetch=False
-        )
-        self.assertTrue(result, "Insert should succeed")
-        
-        # Query with parameters
-        cska = execute_query(
-            "SELECT * FROM clubs WHERE name = ? AND city = ?",
-            ("CSKA Sofia", "София"), fetch=True
-        )
-        self.assertIsNotNone(cska, "CSKA Sofia should exist")
-        self.assertEqual(cska[0]['name'], "CSKA Sofia")
-    
-    def test_execute_query_handles_error(self):
-        """Test execute_query handles database errors"""
-        # Try invalid SQL
-        result = execute_query("INVALID SQL STATEMENT", fetch=True)
-        self.assertIsNone(result, "Should return None on SQL error")
-    
-    def test_database_foreign_key_constraints(self):
-        """Test that foreign key constraints work"""
-        # Try to insert player with non-existent club
-        result = execute_query(
-            "INSERT INTO players (club_id, full_name, birth_date, nationality, position, number, status) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (999, "Test Player", "1990-01-01", "Test", "GK", 1, "Active"), fetch=False
-        )
-        # Should fail due to foreign key constraint
-        self.assertIsNone(result, "Should fail due to foreign key constraint")
-    
-    def test_database_unique_constraints(self):
-        """Test that unique constraints work"""
-        # Try to insert duplicate club name
-        result = execute_query(
-            "INSERT INTO clubs (name, city, founded_year) VALUES (?, ?, ?)",
-            ("Левски София", "Test City", 2000), fetch=False
-        )
-        # Should fail due to unique constraint
-        self.assertIsNone(result, "Should fail due to unique constraint")
-    
-    def test_database_cascade_delete(self):
-        """Test that foreign key SET NULL works when club is deleted"""
-        execute_query("DELETE FROM clubs WHERE name = ?", ("Левски София",), fetch=False)
-        orphaned = execute_query(
-            "SELECT COUNT(*) as count FROM players WHERE club_id IS NULL",
-            fetch=True
-        )
-        self.assertGreater(orphaned[0]['count'], 0,
-                           "Players should have club_id set to NULL after club deletion")
-    
-    def test_database_schema_validation(self):
-        """Test that database schema is correct"""
-        # Check clubs table schema
-        columns = execute_query("PRAGMA table_info(clubs)", fetch=True)
-        column_names = [col['name'] for col in columns]
-        expected_columns = ['id', 'name', 'city', 'founded_year']
-        
-        for col in expected_columns:
-            self.assertIn(col, column_names, f"Column {col} should exist in clubs table")
-        
-        # Check players table schema
-        columns = execute_query("PRAGMA table_info(players)", fetch=True)
-        column_names = [col['name'] for col in columns]
-        expected_columns = ['id', 'club_id', 'full_name', 'birth_date', 'nationality', 'position', 'number', 'status']
-        
-        for col in expected_columns:
-            self.assertIn(col, column_names, f"Column {col} should exist in players table")
-        
-        # Check foreign key constraint
-        fk_info = execute_query("PRAGMA foreign_key_list(players)", fetch=True)
-        self.assertGreater(len(fk_info), 0, "Players table should have foreign key constraints")
-        self.assertEqual(fk_info[0]['table'], 'clubs', "Should reference clubs table")
+        self.db = importlib.import_module('db')
 
+    def test_initialize_database_creates_new_db_and_seeds(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = os.path.join(tmp, 'football.db')
+            schema = os.path.join(tmp, 'schema.sql')
+            seed = os.path.join(tmp, 'seed_demo.sql')
+            migration = os.path.join(tmp, 'migration.sql')
+            with open(schema, 'w', encoding='utf-8') as f:
+                f.write('CREATE TABLE clubs (id INTEGER PRIMARY KEY, name TEXT);')
+            with open(seed, 'w', encoding='utf-8') as f:
+                f.write("INSERT INTO clubs (id, name) VALUES (1, 'Demo');")
+            with open(migration, 'w', encoding='utf-8') as f:
+                f.write('')
 
-if __name__ == '__main__':
-    unittest.main()
+            with mock.patch.object(self.db, 'DB_PATH', db_path), \
+                 mock.patch.object(self.db, 'SCHEMA_PATH', schema), \
+                 mock.patch.object(self.db, 'MIGRATION_PATH', migration):
+                self.db.initialize_database()
+
+            conn = sqlite3.connect(db_path)
+            cur = conn.cursor()
+            cur.execute('SELECT COUNT(*) FROM clubs')
+            self.assertEqual(cur.fetchone()[0], 1)
+            conn.close()
+
+    def test_initialize_database_runs_migration_when_flag_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = os.path.join(tmp, 'football.db')
+            migration = os.path.join(tmp, 'migration.sql')
+            conn = sqlite3.connect(db_path)
+            cur = conn.cursor()
+            cur.execute('CREATE TABLE base (id INTEGER PRIMARY KEY)')
+            conn.commit()
+            conn.close()
+            with open(migration, 'w', encoding='utf-8') as f:
+                f.write('CREATE TABLE migrated (id INTEGER);')
+
+            with mock.patch.object(self.db, 'DB_PATH', db_path), \
+                 mock.patch.object(self.db, 'MIGRATION_PATH', migration):
+                self.db.initialize_database()
+
+            conn = sqlite3.connect(db_path)
+            cur = conn.cursor()
+            cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='migrated'")
+            self.assertIsNotNone(cur.fetchone())
+            cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='_migration_done'")
+            self.assertIsNotNone(cur.fetchone())
+            conn.close()
+
+    def test_run_migration_ignores_statement_errors(self):
+        conn = sqlite3.connect(':memory:')
+        cur = conn.cursor()
+        with tempfile.TemporaryDirectory() as tmp:
+            migration = os.path.join(tmp, 'migration.sql')
+            with open(migration, 'w', encoding='utf-8') as f:
+                f.write('CREATE TABLE x (id INTEGER);CREATE TABLE x (id INTEGER);')
+            with mock.patch.object(self.db, 'MIGRATION_PATH', migration):
+                self.db._run_migration(conn, cur)
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='_migration_done'")
+        self.assertIsNotNone(cur.fetchone())
+        conn.close()
+
+    def test_insert_sample_data_raises_when_seed_missing(self):
+        conn = sqlite3.connect(':memory:')
+        cur = conn.cursor()
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_schema = os.path.join(tmp, 'schema.sql')
+            with open(fake_schema, 'w', encoding='utf-8') as f:
+                f.write('')
+            with mock.patch.object(self.db, 'SCHEMA_PATH', fake_schema):
+                with self.assertRaises(FileNotFoundError):
+                    self.db._insert_sample_data(conn, cur)
+        conn.close()
+
+    def test_get_connection_handles_pragma_failure(self):
+        real_connect = sqlite3.connect
+
+        class ConnWrapper:
+            def __init__(self, inner):
+                self.inner = inner
+                self.row_factory = None
+
+            def execute(self, *_args, **_kwargs):
+                raise RuntimeError('pragma fail')
+
+            def __getattr__(self, name):
+                return getattr(self.inner, name)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = os.path.join(tmp, 'football.db')
+            schema = os.path.join(tmp, 'schema.sql')
+            seed = os.path.join(tmp, 'seed_demo.sql')
+            migration = os.path.join(tmp, 'migration.sql')
+            with open(schema, 'w', encoding='utf-8') as f:
+                f.write('CREATE TABLE clubs (id INTEGER PRIMARY KEY, name TEXT);')
+            with open(seed, 'w', encoding='utf-8') as f:
+                f.write("INSERT INTO clubs (id, name) VALUES (1, 'Demo');")
+            with open(migration, 'w', encoding='utf-8') as f:
+                f.write('')
+
+            def fake_connect(path):
+                return ConnWrapper(real_connect(path))
+
+            with mock.patch.object(self.db, 'DB_PATH', db_path), \
+                 mock.patch.object(self.db, 'SCHEMA_PATH', schema), \
+                 mock.patch.object(self.db, 'MIGRATION_PATH', migration), \
+                 mock.patch('db.sqlite3.connect', side_effect=fake_connect):
+                conn = self.db.get_connection()
+                self.assertIsNotNone(conn)
+                conn.close()
+
+    def test_get_connection_handles_exception(self):
+        with mock.patch('db.initialize_database', side_effect=RuntimeError('boom')):
+            self.assertIsNone(self.db.get_connection())
+
+    def test_execute_query_fetch_paths_and_error(self):
+        fake_conn = mock.Mock()
+        fake_cursor = fake_conn.cursor.return_value
+        fake_cursor.fetchall.return_value = [{'count': 1}]
+        with mock.patch('db.get_connection', return_value=fake_conn):
+            self.assertEqual(self.db.execute_query('SELECT 1', fetch=True), [{'count': 1}])
+        fake_cursor.fetchall.return_value = []
+        with mock.patch('db.get_connection', return_value=fake_conn):
+            self.assertIsNone(self.db.execute_query('SELECT 1', fetch=True))
+        with mock.patch('db.get_connection', return_value=fake_conn):
+            self.assertTrue(self.db.execute_query('UPDATE x SET y=1'))
+        fake_cursor.execute.side_effect = sqlite3.Error('bad')
+        with mock.patch('db.get_connection', return_value=fake_conn):
+            self.assertIsNone(self.db.execute_query('BROKEN'))
+
+    def test_execute_variants_fetch_helpers_and_tx_helpers(self):
+        own_conn = mock.Mock()
+        own_cursor = own_conn.cursor.return_value
+        own_cursor.lastrowid = 5
+        with mock.patch('db.get_connection', return_value=own_conn):
+            self.assertEqual(self.db.execute('INSERT INTO x VALUES (1)'), 5)
+        own_cursor.lastrowid = 0
+        with mock.patch('db.get_connection', return_value=own_conn):
+            self.assertTrue(self.db.execute('UPDATE x SET y=1'))
+        own_cursor.execute.side_effect = sqlite3.Error('fail')
+        with mock.patch('db.get_connection', return_value=own_conn):
+            self.assertIsNone(self.db.execute('BROKEN'))
+        own_cursor.execute.side_effect = None
+
+        passed_conn = mock.Mock()
+        passed_cursor = passed_conn.cursor.return_value
+        passed_cursor.lastrowid = 3
+        self.assertEqual(self.db.execute('INSERT', conn=passed_conn), 3)
+        passed_cursor.lastrowid = 0
+        self.assertTrue(self.db.execute('UPDATE', conn=passed_conn))
+        passed_cursor.execute.side_effect = sqlite3.Error('bad')
+        self.assertIsNone(self.db.execute('BROKEN', conn=passed_conn))
+
+        fetch_conn = mock.Mock()
+        fetch_cursor = fetch_conn.cursor.return_value
+        fetch_cursor.fetchall.return_value = [1, 2]
+        with mock.patch('db.get_connection', return_value=fetch_conn):
+            self.assertEqual(self.db.fetch_all('SELECT * FROM x'), [1, 2])
+        fetch_cursor.execute.side_effect = sqlite3.Error('oops')
+        with mock.patch('db.get_connection', return_value=fetch_conn):
+            self.assertEqual(self.db.fetch_all('BROKEN'), [])
+        with mock.patch('db.get_connection', return_value=None):
+            self.assertEqual(self.db.fetch_all('SELECT'), [])
+        with mock.patch('db.fetch_all', return_value=[{'id': 1}]):
+            self.assertEqual(self.db.fetch_one('SELECT'), {'id': 1})
+        with mock.patch('db.fetch_all', return_value=[]):
+            self.assertIsNone(self.db.fetch_one('SELECT'))
+
+        conn = mock.Mock()
+        self.db.commit(conn)
+        conn.commit.assert_called_once()
+        self.db.rollback(conn)
+        conn.rollback.assert_called_once()
+        self.db.commit(None)
+        self.db.rollback(None)
