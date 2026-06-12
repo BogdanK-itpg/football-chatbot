@@ -1,6 +1,12 @@
 # Football Chatbot - Command Reference
 
-Complete documentation for all chatbot commands, including syntax, parameters, and usage examples.
+Complete reference for every current command intent in `src/chatbot/intents.json`.
+
+This document is intentionally aligned with the current app behavior:
+
+- chatbot intents
+- router behavior
+- command builder coverage
 
 ---
 
@@ -13,7 +19,8 @@ Complete documentation for all chatbot commands, including syntax, parameters, a
 5. [League Management](#league-management)
 6. [Statistics & Metrics](#statistics--metrics)
 7. [Transfers](#transfers)
-8. [Events & Fixtures](#events--fixtures)
+8. [Prediction](#prediction)
+9. [Parameter Reference](#parameter-reference)
 
 ---
 
@@ -23,7 +30,7 @@ Complete documentation for all chatbot commands, including syntax, parameters, a
 Display all available commands.
 
 **Syntax:**
-```
+```text
 помощ
 help
 какво можеш
@@ -32,25 +39,20 @@ help
 
 **Parameters:** None
 
-**Examples:**
-```
+**Example:**
+```text
 >> помощ
 Налични команди:
-- помощ
-- изход
-- добави клуб [club_name]
 ...
 ```
-
-**Notes:** Shows all command patterns from the intents configuration.
 
 ---
 
 ### `exit`
-Exit the chatbot application.
+Exit the chatbot.
 
 **Syntax:**
-```
+```text
 изход
 exit
 край
@@ -59,8 +61,8 @@ exit
 
 **Parameters:** None
 
-**Examples:**
-```
+**Example:**
+```text
 >> изход
 До скоро!
 ```
@@ -70,10 +72,10 @@ exit
 ## Club Management
 
 ### `add_club`
-Create a new football club.
+Create a new club.
 
 **Syntax:**
-```
+```text
 добави клуб [club_name]
 създай клуб [club_name]
 нов клуб [club_name]
@@ -81,34 +83,25 @@ Create a new football club.
 ```
 
 **Parameters:**
-- `club_name` (string, required): Name of the club to create
+- `club_name` (string, required): Club name
 
-**Examples:**
+**Example:**
+```text
+>> добави клуб Дунав Русе
+Клуб 'Дунав Русе' беше добавен успешно.
 ```
->> добави клуб Левски
-Клубът 'Левски' беше добавен успешно.
-
->> създай клуб ЦСКА
-Клубът 'ЦСКА' беше добавен успешно.
-```
-
-**Validation:**
-- Club name cannot be empty
-- Club names must be unique (case-insensitive check)
-- Default city: 'Unknown'
-- Default founding year: 1900
 
 **Error Messages:**
-- `"Името не може да бъде празно."` - Empty club name
-- `"Клуб с това име вече съществува."` - Duplicate club name
+- `Името не може да бъде празно.`
+- `Клуб с това име вече съществува.`
 
 ---
 
 ### `list_clubs`
-Display all registered clubs.
+List all clubs.
 
 **Syntax:**
-```
+```text
 покажи всички клубове
 покажи клубове
 списък с клубове
@@ -116,90 +109,73 @@ Display all registered clubs.
 
 **Parameters:** None
 
-**Examples:**
+**Example:**
+```text
+>> покажи клубове
+1. Левски София
+2. ЦСКА София
+...
 ```
->> покажи всички клубове
-1. Левски
-2. ЦСКА
-3. Лудогорец
-```
-
-**Output:** Numbered list of all clubs in the database.
-
-**Error Messages:**
-- `"Няма добавени клубове."` - No clubs exist
 
 ---
 
 ### `delete_club`
-Remove a club and all associated players.
+Delete a club.
 
 **Syntax:**
-```
+```text
 изтрий клуб [club_name]
-изтрий [club_name]
 премахни клуб [club_name]
 ```
 
 **Parameters:**
-- `club_name` (string, required): Name or ID of the club to delete
+- `club_name` (string, required): Club name or ID
 
-**Examples:**
+**Example:**
+```text
+>> изтрий клуб Дунав Русе
+Клуб 'Дунав Русе' беше изтрит.
 ```
->> изтрий клуб Левски
-Клубът беше изтрит.
-```
-
-**Behavior:**
-- Deletes the club and cascades to delete all players in that club
-- Accepts club name (case-insensitive) or numeric ID
 
 **Error Messages:**
-- `"Укажете име на клуба. Формат: изтрий клуб [име]"` - Missing parameter
-- `"Клубът не беше намерен."` - Club doesn't exist
-
-**⚠️ Known Issue:** Pattern `"изтрий [club_name]"` may conflict with `delete_player` if the input starts with "изтрий играч". Use the explicit form `"изтрий клуб [name]"` for reliability.
+- `Укажете име на клуба. Формат: изтрий клуб [име]`
+- `Няма такъв клуб.`
 
 ---
 
 ### `update_club`
-Modify a club's name, city, or founding year.
+Rename a club.
 
 **Syntax:**
-```
+```text
 редактирай клуб [club_name] на [new_name]
 промени клуб [club_name] на [new_name]
 ```
 
 **Parameters:**
-- `club_name` (string, required): Current name or ID of the club
-- `new_name` (string, required): New name for the club
+- `club_name` (string, required): Current club name or ID
+- `new_name` (string, required): New club name
 
-**Examples:**
-```
->> промени клуб Левски на Левски София
+**Example:**
+```text
+>> промени клуб Ботев Враца на Ботев Враца 1921
 Клубът беше успешно обновен.
 ```
 
-**Behavior:**
-- Updates only the club name (city and founding year not yet supported in this command)
-- Resolves club by name (case-insensitive) or ID
-
 **Error Messages:**
-- `"Недостатъчни параметри. Формат: редактирай клуб [старо име] на [ново име]"` - Missing parameters
-- `"Клубът не беше намерен."` - Club doesn't exist
-- `"Няма зададени промени."` - No update parameters provided
-- `"Невалидна година на основаване."` - Invalid year if updating founding year
+- `Невалидни параметри.`
+- `Формат: редактирай клуб [старо име] на [ново име]`
+- `Клубът не беше намерен.`
 
 ---
 
 ## Player Management
 
 ### `add_player`
-Register a new player in a club.
+Create a player.
 
 **Syntax:**
-```
+```text
 добави играч [full_name] в клуб [club_identifier] позиция [position] номер [number] националност [nationality] дата на раждане [birth_date] статус [status]
 добави играч [full_name] в [club_identifier]
 регистрирай играч [full_name]
@@ -207,50 +183,35 @@ Register a new player in a club.
 ```
 
 **Parameters:**
-- `full_name` (string, required): Player's full name
-- `club_identifier` (string, required): Club name or ID
-- `position` (string, optional but recommended): GK, DF, MF, or FW
-- `number` (integer, optional but recommended): Jersey number (1-99)
-- `nationality` (string, optional but recommended): Player's nationality
-- `birth_date` (string, optional but recommended): Date in YYYY-MM-DD format, not in future
-- `status` (string, optional but recommended): Player status (e.g., "активен", "контракт", "свободен")
+- `full_name` (string, required): Full player name
+- `club_identifier` (string, required for working creation flow): Club name or ID
+- `position` (string, required in full form): `GK`, `DF`, `MF`, `FW`
+- `number` (integer, required in full form): Shirt number
+- `nationality` (string, required in full form)
+- `birth_date` (string, required in full form): `YYYY-MM-DD`
+- `status` (string, required in full form)
 
-**Examples:**
+**Example:**
+```text
+>> добави играч Николай Георгиев в клуб Левски София позиция FW номер 19 националност България дата на раждане 2001-04-17 статус Активен
+Играч 'Николай Георгиев' беше добавен успешно.
 ```
->> добави играч Иван Петров в клуб Левски позиция FW номер 10 националност България дата на раждане 1995-03-15 статус активен
-Играчът беше добавен успешно.
-
->> добави играч Мария Иванова в 1
-Играчът беше добавен успешно.
-```
-
-**Validation:**
-- Full name: non-empty
-- Birth date: valid YYYY-MM-DD format, not in future
-- Nationality: non-empty
-- Position: must be one of GK, DF, MF, FW
-- Number: integer between 1 and 99
-- Status: non-empty
-- Club must exist
 
 **Error Messages:**
-- `"Името на играча не може да бъде празно."`
-- `"Невaлидна дата на раждане. Използвайте формат YYYY-MM-DD и дата не може да бъде в бъдещето."`
-- `"Националността не може да бъде празна."`
-- `"Невaлидна позиция. Използвайте една от: GK, DF, MF, FW."`
-- `"Невaлиден номер. Номерът трябва да бъде между 1 и 99."`
-- `"Статусът не може да бъде празен."`
-- `"Клуб с ID {club_id} не съществува."`
-
-**Notes:** The minimal form `"добави играч [name] в [club]"` works but may result in validation errors if required fields are missing.
+- `Името на играча не може да бъде празно.`
+- `Невaлидна дата на раждане. Използвайте формат YYYY-MM-DD и дата не може да бъде в бъдещето.`
+- `Националността не може да бъде празна.`
+- `Невaлидна позиция. Използвайте една от: GK, DF, MF, FW.`
+- `Невaлиден номер. Номерът трябва да бъде между 1 и 99.`
+- `Статусът не може да бъде празен.`
 
 ---
 
 ### `list_players`
-Display players in a specific club.
+List players from a club.
 
 **Syntax:**
-```
+```text
 покажи играчи на клуб [club_identifier]
 покажи играчи в клуб [club_identifier]
 покажи играчи в [club_identifier]
@@ -259,32 +220,22 @@ Display players in a specific club.
 ```
 
 **Parameters:**
-- `club_identifier` (string, optional): Club name or ID. If omitted, shows all players.
+- `club_identifier` (string, required): Club name or ID
 
-**Examples:**
-```
->> покажи играчи на клуб Левски
-Ето списък с играчи:
-1. #10 Иван Петров (FW)
-2. #5 Георги Dimitров (DF)
+**Example:**
+```text
+>> покажи играчи на клуб Левски София
+ID  Име                   Клуб                    Поз  №   Националност   Р. Дата     Статус
 ...
-
->> покажи играчи
-Ето списък с всички играчи:
-[all players from all clubs]
 ```
-
-**Output:** Lists players with jersey number, full name, and position.
-
-**Notes:** The pattern `"покажи всички играчи"` is also used by `list_all_players` intent. Due to pattern ordering issues, it may sometimes match `list_players` instead. If you want all players, use `"всички играчи"` as a fallback.
 
 ---
 
 ### `list_all_players`
-Display all players across all clubs (alternative to `list_players` without parameter).
+List all players.
 
 **Syntax:**
-```
+```text
 покажи всички играчи
 всички играчи
 списък с всички играчи
@@ -292,110 +243,83 @@ Display all players across all clubs (alternative to `list_players` without para
 
 **Parameters:** None
 
-**Examples:**
-```
->> всички играчи
-Ето списък с всички играчи:
-1. #10 Иван Петров (Левски, FW)
-2. #7 Петър Георгиев (ЦСКА, MF)
+**Example:**
+```text
+>> покажи всички играчи
+ID  Име                   Клуб                    Поз  №   Националност   Р. Дата     Статус
 ...
 ```
-
-**⚠️ Known Issue:** Pattern conflicts with `list_players`. The pattern `"покажи всички играчи"` may incorrectly match `list_players` with "всички" interpreted as a club name. Use `"всички играчи"` (without "покажи") for reliable results.
 
 ---
 
 ### `update_player_position`
-Change a player's position.
+Update a player's position.
 
 **Syntax:**
-```
+```text
 смени позиция на [player_identifier] на [new_position]
 промени позиция на [player_identifier] на [new_position]
 ```
 
 **Parameters:**
-- `player_identifier` (string, required): Player name or ID
-- `new_position` (string, required): New position (GK, DF, MF, FW)
+- `player_identifier` (string, required)
+- `new_position` (string, required): `GK`, `DF`, `MF`, `FW`
 
-**Examples:**
+**Example:**
+```text
+>> смени позиция на Александър Колев на MF
+Позицията на играч с ID 5 беше обновена на MF.
 ```
->> смени позиция на Иван Петров на MF
-Позицията е обновена.
-```
-
-**Validation:**
-- Position must be one of: GK, DF, MF, FW
-- Player must exist
-
-**Error Messages:**
-- `"Недостатъчни параметри. Формат: смени позиция на [player_identifier] на [new_position]"`
 
 ---
 
 ### `update_player_number`
-Change a player's jersey number.
+Update a player's shirt number.
 
 **Syntax:**
-```
+```text
 смени номер на [player_identifier] на [new_number]
 промени номер на [player_identifier] на [new_number]
 ```
 
 **Parameters:**
-- `player_identifier` (string, required): Player name or ID
-- `new_number` (integer, required): New jersey number (1-99)
+- `player_identifier` (string, required)
+- `new_number` (integer, required)
 
-**Examples:**
+**Example:**
+```text
+>> смени номер на Александър Колев на 99
+Номерът на играч с ID 5 беше сменен на 99.
 ```
->> промени номер на Иван Петров на 9
-Номерът е обновен.
-```
-
-**Validation:**
-- Number must be between 1 and 99
-- Player must exist
-
-**Error Messages:**
-- `"Недостатъчни параметри. Формат: смени номер на [player_identifier] на [new_number]"`
-- `"Невaлиден номер. Номерът трябва да бъде между 1 и 99."`
 
 ---
 
 ### `update_player_status`
-Change a player's status.
+Update a player's status.
 
 **Syntax:**
-```
+```text
 смени статус на [player_identifier] на [new_status]
 промени статус на [player_identifier] на [new_status]
 ```
 
 **Parameters:**
-- `player_identifier` (string, required): Player name or ID
-- `new_status` (string, required): New status text
+- `player_identifier` (string, required)
+- `new_status` (string, required)
 
-**Examples:**
+**Example:**
+```text
+>> смени статус на Александър Колев на Контузен
+Статусът на играч с ID 5 беше обновен на 'Контузен'.
 ```
->> смени статус на Иван Петров на свободен
-Статусът е обновен.
-```
-
-**Validation:**
-- Status text cannot be empty
-- Player must exist
-
-**Error Messages:**
-- `"Недостатъчни параметри. Формат: смени статус на [player_identifier] на [new_status]"`
-- `"Статусът не може да бъде празен."`
 
 ---
 
 ### `delete_player`
-Remove a player from the database.
+Delete a player.
 
 **Syntax:**
-```
+```text
 изтрий играч [player_identifier]
 премахни играч [player_identifier]
 ```
@@ -403,398 +327,301 @@ Remove a player from the database.
 **Parameters:**
 - `player_identifier` (string, required): Player name or ID
 
-**Examples:**
+**Example:**
+```text
+>> изтрий играч 50
+Играч с ID 50 беше изтрит.
 ```
->> изтрий играч Иван Петров
-Играчът беше изтрит.
-```
-
-**Behavior:**
-- Deletes the player from the database
-- Accepts player name (exact match, case-insensitive) or numeric ID
-
-**Error Messages:**
-- `"Укажете играч за изтриване. Формат: изтрий играч [player_identifier]"`
-- `"Играчът не беше намерен."` - Player doesn't exist
-
-**⚠️ Known Issue:** Pattern `"изтрий играч [player]"` may be shadowed by `delete_club` pattern `"изтрий [club_name]"` due to order-dependent matching. If you get club deletion instead, use numeric player ID: `"изтрий играч 123"`.
 
 ---
 
 ## Match Management
 
 ### `record_match`
-Log a match with teams, date, and final score.
+Create a played match record.
 
 **Syntax:**
-```
+```text
 запиши мач [home_team] срещу [away_team] дата [match_date] резултат [home_goals]-[away_goals]
 добави мач [home_team] vs [away_team] на [match_date] резултат [home_goals]-[away_goals]
 регистрирай мач [home_team] - [away_team] [home_goals]:[away_goals] на [match_date]
+запиши мач [home_team] срещу [away_team] дата [match_date] резултат [home_goals]-[away_goals] лига [league] кръг [round_no]
+добави мач [home_team] vs [away_team] на [match_date] резултат [home_goals]-[away_goals] лига [league] кръг [round_no]
 ```
 
 **Parameters:**
-- `home_team` (string, required): Home team name or ID
-- `away_team` (string, required): Away team name or ID
-- `match_date` (string, required): Date in YYYY-MM-DD format
-- `home_goals` (integer, required): Goals scored by home team
-- `away_goals` (integer, required): Goals scored by away team
+- `home_team` (string, required)
+- `away_team` (string, required)
+- `match_date` (string, required): `YYYY-MM-DD`
+- `home_goals` (integer, required)
+- `away_goals` (integer, required)
+- `league` (string, optional)
+- `round_no` (integer, optional)
 
-**Examples:**
+**Example:**
+```text
+>> запиши мач Берое Стара Загора срещу Арда Кърджали дата 2025-09-12 резултат 2-1 лига Втора Лига кръг 6
+Мачът беше записан с ID 41.
 ```
->> запиши мач Левски срещу ЦСКА дата 2025-03-15 резултат 2-1
-Мачът беше записан с ID 1.
-
->> добави мач Лудогорец vs Ботев на 2025-03-20 резултат 3-0
-Мачът беше записан с ID 2.
-```
-
-**Validation:**
-- Both teams must exist as clubs
-- Teams cannot be the same
-- Date format: YYYY-MM-DD
-- Goals must be non-negative integers
-
-**Error Messages:**
-- `"Недостатъчни параметри. Формат: запиши мач [home_team] срещу [away_team] дата [match_date] резултат [home_goals]-[away_goals]"`
-- `"Един от клубовете не съществува."`
-- `"Двата отбора не могат да бъдат едни и същи."`
-- `"Грешка при запис на мача."`
-
-**❌ Critical Issue:** The primary pattern `"запиши мач [home] срещу [away] дата [date] резултат [hg]-[ag]"` is currently **broken** and returns `unknown` intent. The regex construction in `_pattern_to_regex()` has issues with hyphenated patterns. Workaround: Use alternative patterns `"добави мач ... vs ..."` or `"регистрирай мач ..."` which may work correctly.
 
 ---
 
 ### `show_match`
-Display details of a specific match.
+Show one match.
 
 **Syntax:**
-```
+```text
 покажи мач [match_id]
 информация за мач [match_id]
 детайли за мач [match_id]
 ```
 
 **Parameters:**
-- `match_id` (integer, required): Match ID from database
+- `match_id` (integer, required)
 
-**Examples:**
-```
+**Example:**
+```text
 >> покажи мач 1
-2025-03-15: Левски 2-1 ЦСКА
+2025-08-01: Левски София 2-1 ЦСКА София
 ```
-
-**Output:** Date, home team, score, away team.
-
-**Error Messages:**
-- `"Формат: покажи мач [match_id]"`
-- `"Мачът не е намерен."`
 
 ---
 
 ### `record_event`
-Log an in-game event (goal, assist, card, appearance).
+Record a match event.
 
 **Syntax:**
-```
+```text
 запиши гол [player_identifier] в мач [match_id] минута [minute]
 запиши асист [player_identifier] в мач [match_id] минута [minute]
 запиши жълт картон [player_identifier] в мач [match_id] минута [minute]
 запиши червен картон [player_identifier] в мач [match_id] минута [minute]
 запиши поява [player_identifier] в мач [match_id]
+запиши [event_type] [player_identifier] в мач [match_id] минута [minute]
 ```
 
 **Parameters:**
-- `event_type` (implicit from pattern): goal, assist, yellow, red, appearance
-- `player_identifier` (string, required): Player name or ID
-- `match_id` (integer, required): Match ID
-- `minute` (integer, required): Minute of event (not needed for 'appearance')
+- `player_identifier` (string, required)
+- `match_id` (integer, required)
+- `minute` (integer, required except for `поява`)
+- `event_type` (implicit or explicit): `goal`, `assist`, `yellow`, `red`, `appearance`
 
-**Examples:**
-```
->> запиши гол Иван Петров в мач 1 минута 34
-Събитието беше записано.
-
->> запиши жълт картон Петър Георгиев в мач 1 минута 67
-Събитието беше записано.
+**Example:**
+```text
+>> запиши гол Александър Колев в мач 21 минута 73
+Събитието беше записано успешно.
 ```
 
-**Event Types:**
-- `гол` - Goal (also updates match goals if match has no score yet)
-- `асист` - Assist
-- `жълт картон` - Yellow card
-- `червен картон` - Red card
-- `поява` - Appearance (no minute parameter)
+---
 
-**Validation:**
-- Player must exist
-- Match must exist
-- Minute must be valid integer (1-90+)
+### `show_events`
+Show all events for a match.
 
-**Error Messages:**
-- `"Недостатъчни параметри. Формат: запиши събитие [event_type] [player_identifier] в мач [match_id] минута [minute]"`
+**Syntax:**
+```text
+покажи събития [match_id]
+покажи събития
+събития за мач [match_id]
+```
 
-**⚠️ Known Issue:** The router expects `event_type` in params, but NLU may not extract it properly. The command appears to work because the router may infer it from the pattern tag. This needs verification.
+**Parameters:**
+- `match_id` (integer, required in practice for useful execution)
+
+**Example:**
+```text
+>> покажи събития 1
+23' - ГОЛ - Александър Колев
+44' - АСИСТЕНЦИЯ - Георги Миланов
+...
+```
+
+---
+
+### `show_round`
+Show a round from a league.
+
+**Syntax:**
+```text
+покажи кръг [round_no] [league_name]
+```
+
+**Parameters:**
+- `round_no` (integer, required)
+- `league_name` (string, required)
+
+**Example:**
+```text
+>> покажи кръг 1 Първа Лига
+--- Кръг 1 ---
+ID:1 | 2025-08-01 | Левски София 2:1 ЦСКА София | ИЗИГРАН
+...
+```
 
 ---
 
 ### `get_fixtures`
-Display all matches in a league.
+Show league fixtures.
 
 **Syntax:**
-```
+```text
 покажи мачове в лига [league_identifier]
 покажи кръгове за лига [league_identifier]
 ```
 
 **Parameters:**
-- `league_identifier` (string, required): League name or ID
+- `league_identifier` (string, required)
 
-**Examples:**
-```
+**Example:**
+```text
 >> покажи мачове в лига Първа Лига
-Ето мачовете:
-1. 2025-03-15: Левски vs ЦСКА
-2. 2025-03-20: Лудогорец vs Ботев
+2025-08-01: Левски София vs ЦСКА София (2-1)
 ...
 ```
-
-**Output:** List of matches with dates and team pairings.
-
-**Notes:** This is an alias for viewing generated fixtures. Use `generate_round_robin` first to create the schedule.
 
 ---
 
 ## League Management
 
 ### `create_league`
-Create a new league/competition.
+Create a new league.
 
 **Syntax:**
-```
+```text
+създай лига [league_name] за сезон [season]
+добави лига [league_name] за сезон [season]
 създай лига [league_name] сезон [season]
+нова лига [league_name] сезон [season]
 създай лига [league_name] [season]
 добави лига [league_name] [season]
 нова лига [league_name] [season]
 ```
 
 **Parameters:**
-- `league_name` (string, required): Name of the league
-- `season` (string, required): Season identifier. Accepted formats: `2025`, `2025/26`, `2025/2026`, `2025-2026`
+- `league_name` (string, required)
+- `season` (string, required)
 
-**Examples:**
+**Example:**
+```text
+>> създай лига Купа на България сезон 2025
+Лига 'Купа на България' (2025) беше създадена успешно.
 ```
->> създай лига Първа Лига 2025/26
-Лига 'Първа Лига' (2025/26) беше създадена успешно.
-
->> създай лига Първа Лига сезон 2025
-Лига 'Първа Лига' (2025) беше създадена успешно.
-
->> добави лига Втора Лига 2024-2026
-Лига 'Втора Лига' (2024-2026) беше създадена успешно.
-```
-
-**Validation:**
-- League name cannot be empty
-- Season cannot be empty
-- Season format must match: `^\d{4}([\/-]\d{2,4})?$` (e.g. `2025`, `2025/26`, `2025/2026`, `2025-2026`)
-- Duplicate (name + season) is prevented at database level and checked before insert
-
-**Error Messages:**
-- `"Името на лигата не може да бъде празно."`
-- `"Сезонът не може да бъде празен."`
-- `"Невалиден формат на сезон. Използвайте формат: 2025, 2025/26, 2025/2026 или 2025-2026."`
-- `"Лига с име '...' и сезон '...' вече съществува."`
-- `"Грешка при създаване на лига."`
 
 ---
 
 ### `add_club_to_league`
-Add a club to a league's roster.
+Add a club to a league.
 
 **Syntax:**
-```
+```text
 добави клуб [club_identifier] в лига [league_identifier]
 включи [club_identifier] в [league_identifier]
 ```
 
 **Parameters:**
-- `club_identifier` (string, required): Club name or ID
-- `league_identifier` (string, required): League name or ID
+- `club_identifier` (string, required)
+- `league_identifier` (string, required)
 
-**Examples:**
-```
->> добави клуб Левски в лига Първа Лига
-Клубът беше добавен в лигата успешно.
-
->> включи ЦСКА в Първа Лига
+**Example:**
+```text
+>> добави клуб Ботев Враца в лига Втора Лига
 Клубът беше добавен в лигата успешно.
 ```
-
-**Validation:**
-- Club must exist
-- League must exist
-- Club cannot be added twice to same league (UNIQUE constraint)
-
-**Error Messages:**
-- `"Няма лига с име/ID '...'."`
-- `"Клубът не съществува."`
-- `"Грешка при добавяне на клуба в лигата (възможно дублиране)."`
 
 ---
 
 ### `get_league_teams`
-List all clubs participating in a league.
+Show all teams in a league.
 
 **Syntax:**
-```
-покажи отбори в лига [league_identifier] [season]
+```text
 покажи отбори в лига [league_identifier]
-покажи отборите на [league_identifier] [season]
 покажи отборите на [league_identifier]
 ```
 
 **Parameters:**
-- `league_identifier` (string, required): League name or ID
-- `season` (string, optional): Season filter
+- `league_identifier` (string, required)
 
-**Examples:**
-```
+**Example:**
+```text
 >> покажи отбори в лига Първа Лига
 - Левски София (ID: 1)
 - ЦСКА София (ID: 2)
-- Ботев Пловдив (ID: 3)
-- Лудогорец Разград (ID: 4)
+...
 ```
-
-**Output:** List of clubs in the league with their IDs.
-
-**Error Messages:**
-- `"Лигата не съществува или няма отбори."`
 
 ---
 
 ### `remove_club_from_league`
-Remove a club from a league's roster.
+Remove a club from a league.
 
 **Syntax:**
-```
+```text
 премахни отбор [club_identifier] от лига [league_identifier]
 премахни клуб [club_identifier] от лига [league_identifier]
 изтрий отбор [club_identifier] от лига [league_identifier]
 ```
 
 **Parameters:**
-- `club_identifier` (string, required): Club name or ID
-- `league_identifier` (string, required): League name or ID
+- `club_identifier` (string, required)
+- `league_identifier` (string, required)
 
-**Examples:**
-```
->> премахни отбор Левски София от лига Първа Лига
+**Example:**
+```text
+>> премахни отбор Ботев Враца от лига Втора Лига
 Клубът беше премахнат от лигата успешно.
 ```
-
-**Validation:**
-- League must exist
-- Club must exist
-- Club must be in the league
-- Schedule must NOT exist (cannot remove team after schedule is generated)
-
-**Error Messages:**
-- `"Лигата не съществува."`
-- `"Клубът не съществува."`
-- `"Клубът не е в тази лига."`
-- `"Не можете да премахнете отбор, след като програмата е генерирана. Изтрийте програмата първо."`
 
 ---
 
 ### `generate_round_robin`
-Automatically generate match fixtures for a league using round-robin scheduling.
+Generate a schedule for a league.
 
 **Syntax:**
-```
+```text
 генерирай кръгове за лига [league_identifier]
 създай кръгове [league_identifier]
+генерирай програма [league_identifier]
 ```
 
 **Parameters:**
-- `league_identifier` (string, required): League name or ID
+- `league_identifier` (string, required)
 
-**Optional Parameters (via function signature, not exposed in patterns):**
-- `double_round` (boolean): Generate home-and-away fixtures (default: False, single round-robin)
-- `start_date` (string, YYYY-MM-DD): First match day (default: today)
-- `interval_days` (integer): Days between match rounds (default: 7)
-
-**Examples:**
+**Example:**
+```text
+>> генерирай кръгове за лига Купа на България
+Създадени 6 мача за лига Купа на България.
 ```
->> генерирай кръгове за лига Първа Лига
-Календарът беше генериран.
-```
-
-**Behavior:**
-- Requires at least 2 teams in the league
-- Generates all pairwise matchups
-- For odd number of teams, uses bye weeks
-- Creates match records with home/away assignments
-- Schedules matches at weekly intervals starting from today (or specified start_date)
-
-**Error Messages:**
-- `"Недостатъчно отбори за създаване на кръгове."` - Less than 2 teams
-- `"Няма лига с име/ID '...'."` - League not found
-- `"Програмата за тази лига вече е генерирана."` - Regeneration blocked
-
-**Notes:** This creates unplayed match fixtures (scores are NULL). Use `record_match` to update results, or `record_event` to log in-game events. Regeneration is blocked once matches exist.
 
 ---
 
 ### `get_standings`
-Display the league table with computed rankings.
+Show league standings.
 
 **Syntax:**
-```
+```text
 покажи класиране [league_identifier]
 класиране на лига [league_identifier]
 ```
 
 **Parameters:**
-- `league_identifier` (string, required): League name or ID
+- `league_identifier` (string, required)
 
-**Examples:**
-```
+**Example:**
+```text
 >> покажи класиране Първа Лига
-Ето класирането:
-1. Левски    P:6 W:4 D:1 L:1 GF:12 GA:5 GD:+7 Pts:13
-2. ЦСКА      P:6 W:3 D:2 L:1 GF:9 GA:4 GD:+5 Pts:11
-3. Лудогорец P:6 W:2 D:1 L:3 GF:7 GA:10 GD:-3 Pts:7
+# Отбор                 MP  W  D  L  GF:GA   GD  PTS
 ...
 ```
-
-**Columns:**
-- P: Played matches
-- W: Wins
-- D: Draws
-- L: Losses
-- GF: Goals For
-- GA: Goals Against
-- GD: Goal Difference
-- Pts: Points (3 for win, 1 for draw)
-
-**Sorting:** Primary: Points (descending), Secondary: Goal Difference, Tertiary: Goals For
-
-**Error Messages:**
-- `"Формат: покажи класиране [league_identifier]"`
-
-**Notes:** Only counts matches with both teams' scores recorded (played matches).
 
 ---
 
 ## Statistics & Metrics
 
 ### `club_statistics`
-Display detailed statistics for a club.
+Show club statistics.
 
 **Syntax:**
-```
+```text
 покажи статистика на клуб [club_identifier]
 статистика на клуб [club_identifier]
 класиране на [club_identifier]
@@ -802,69 +629,46 @@ Display detailed statistics for a club.
 ```
 
 **Parameters:**
-- `club_identifier` (string, required): Club name or ID
+- `club_identifier` (string, required)
 
-**Examples:**
+**Example:**
+```text
+>> покажи статистика на клуб Левски София
+Статистика за клуб Левски София:
+Игри: 8, Победи: 5, Равни: 2, Загуби: 1,
+...
 ```
->> покажи статистика на клуб Левски
-Статистика за клуб Левски:
-Игри: 6, Победи: 4, Равни: 1, Загуби: 1,
-Голове за: 12, Голове срещу: 5, Голова разлика: 7, Точки: 13
-```
-
-**Output Metrics:**
-- Played matches
-- Wins, Draws, Losses
-- Goals For (GF)
-- Goals Against (GA)
-- Goal Difference (GD)
-- Points (Pts)
-
-**Error Messages:**
-- `"Недостатъчни параметри. Формат: покажи статистика на клуб [club_identifier]"`
-- `"Клуб '...' не съществува."`
 
 ---
 
 ### `player_statistics`
-Display basic statistics for a player.
+Show player statistics.
 
 **Syntax:**
-```
+```text
 покажи статистика на играч [player_identifier]
 статистика на играч [player_identifier]
 покажи статистика [player_identifier]
 ```
 
 **Parameters:**
-- `player_identifier` (string, required): Player name or ID
+- `player_identifier` (string, required)
 
-**Examples:**
+**Example:**
+```text
+>> покажи статистика на играч Александър Колев
+Статистика за играч Александър Колев:
+Голове: 6, Асистенции: 1,
+Появи: 8, Жълти: 1, Червени: 0
 ```
->> покажи статистика на играч Иван Петров
-Статистика за играч Иван Петров:
-Голове: 5, Асистенции: 2,
-Появи: 15, Жълти: 2, Червени: 0
-```
-
-**Output Metrics:**
-- Goals
-- Assists
-- Appearances (matches played)
-- Yellow cards
-- Red cards
-
-**Error Messages:**
-- `"Недостатъчни параметри. Формат: покажи статистика на играч [player_identifier]"`
-- `"Играч '...' не съществува."`
 
 ---
 
 ### `player_metrics`
-Display advanced per-90 minute metrics for a player.
+Show advanced player metrics.
 
 **Syntax:**
-```
+```text
 покажи метрики на играч [player_identifier]
 покажи разширени метрики на играч [player_identifier]
 метрики на играч [player_identifier]
@@ -872,88 +676,130 @@ Display advanced per-90 minute metrics for a player.
 ```
 
 **Parameters:**
-- `player_identifier` (string, required): Player name or ID
+- `player_identifier` (string, required)
 
-**Examples:**
+**Example:**
+```text
+>> покажи метрики на играч Александър Колев
+Разширени метрики за Александър Колев:
+Мин. (прибл.): 720, Гол/90: 0.75, Асист/90: 0.12
 ```
->> покажи метрики на играч Иван Петров
-Разширени метрики за Иван Петров:
-Мин. (прибл.): 1350, Гол/90: 0.33, Асист/90: 0.13
-```
-
-**Output Metrics:**
-- Minutes played (approximated as appearances × 90)
-- Goals per 90 minutes
-- Assists per 90 minutes
-
-**Calculation:**
-- `minutes_played = appearances × 90`
-- `goals_per_90 = (goals / appearances) × 90` (if appearances > 0)
-- `assists_per_90 = (assists / appearances) × 90` (if appearances > 0)
-
-**Error Messages:**
-- `"Недостатъчни параметри. Формат: покажи метрики на играч [player_identifier]"`
-- `"Играч '...' не съществува."`
-
-**Notes:** These are approximate metrics since actual minutes played are not tracked. For more accurate metrics, consider tracking minutes in the events table.
 
 ---
 
 ## Transfers
 
-### `transfer_player`
-Move a player from one club to another.
+### `show_transfers_club`
+Show transfer history for a club.
 
 **Syntax:**
+```text
+покажи трансфери на клуб [club_identifier]
+трансфери на клуб [club_identifier]
+история на трансфери [club_identifier]
 ```
+
+**Parameters:**
+- `club_identifier` (string, required)
+
+**Example:**
+```text
+>> покажи трансфери на клуб Славия София
+Трансфери на клуб 'Славия София':
+...
+```
+
+---
+
+### `show_transfers_player`
+Show transfer history for a player.
+
+**Syntax:**
+```text
+покажи трансфери на играч [player_identifier]
+покажи трансфери на [player_identifier]
+трансфери на играч [player_identifier]
+история на трансфери [player_identifier]
+```
+
+**Parameters:**
+- `player_identifier` (string, required)
+
+**Example:**
+```text
+>> покажи трансфери на играч Самуел Акере
+Трансфери на Самуел Акере:
+...
+```
+
+---
+
+### `transfer_player`
+Transfer a player between clubs.
+
+**Syntax:**
+```text
+трансфер [player_identifier] от [from_club] в [to_club_identifier] [transfer_date] [fee]
+трансфер [player_identifier] от [from_club] в [to_club_identifier] [transfer_date]
+трансфер [player_identifier] от [from_club] в [to_club_identifier]
+трансферирай играч [player_identifier] от [from_club] в клуб [to_club_identifier]
+трансферирай играч [player_identifier] от [from_club] в [to_club_identifier]
+премести играч [player_identifier] от [from_club] в клуб [to_club_identifier]
+премести играч [player_identifier] от [from_club] в [to_club_identifier]
+прехвърли играч [player_identifier] от [from_club] в клуб [to_club_identifier]
+прехвърли играч [player_identifier] от [from_club] в [to_club_identifier]
 трансферирай играч [player_identifier] в клуб [club_identifier]
+трансферирай играч [player_identifier] в [club_identifier]
+премести играч [player_identifier] в клуб [club_identifier]
+премести играч [player_identifier] в [club_identifier]
+прехвърли играч [player_identifier] в клуб [club_identifier]
 прехвърли играч [player_identifier] в [club_identifier]
 трансфер [player_identifier] -> [club_identifier]
 ```
 
 **Parameters:**
-- `player_identifier` (string, required): Player name or ID
-- `club_identifier` (string, required): Destination club name or ID
+- `player_identifier` (string, required)
+- `from_club` (string, conditionally required)
+- `to_club_identifier` (string, conditionally required)
+- `club_identifier` (string, conditionally required for short forms)
+- `transfer_date` (string, optional)
+- `fee` (number, optional)
 
 **Examples:**
-```
->> трансферирай играч Иван Петров в клуб ЦСКА
+```text
+>> трансфер Самуел Акере от Левски София в Черно море Варна 2025-07-01 500000
+Играч 'Самуел Акере' беше трансфериран в клуб 'Черно море Варна'.
+
+>> трансферирай играч Свободен Играч в клуб Арда Кърджали
 Играчът беше трансфериран.
-
->> трансфер Петър Георгиев -> Лудогорец
-Играчът беше трансфериран.
-```
-
-**Behavior:**
-- Executes within a database transaction (atomic operation)
-- Updates player's club_id
-- Handles jersey number conflicts: if the destination club already has the same number, assigns the smallest available number (1-99)
-- Prevents transferring to the same club
-- Logs the transfer in command history
-
-**Special Cases:**
-- If jersey number is taken in destination club, automatically reassigns to first available number
-- Transfer to same club returns: `"Играчът вече е в този клуб."`
-
-**Error Messages:**
-- `"Играч '...' не съществува."`
-- `"Клуб '...' не съществува."`
-- `"Грешка при трансфер на играча."`
-
-**Response Examples:**
-```
-Играч 'Иван Петров' беше трансфериран в клуб с ID 2.
-Играч 'Петър Георгиев' беше трансфериран в клуб с ID 3. Присвоен нов номер: #11.
 ```
 
 ---
 
-## Events & Fixtures
+## Prediction
 
-### `get_fixtures` (alias)
-Display all matches in a league.
+### `predict_match`
+Predict match outcome percentages.
 
-See [Match Management](#match-management) section for full documentation.
+**Syntax:**
+```text
+Prediction [team1] vs [team2]
+Predict [team1] vs [team2]
+Прогноза [team1] срещу [team2]
+Predict [team1] against [team2]
+```
+
+**Parameters:**
+- `team1` (string, required)
+- `team2` (string, required)
+
+**Example:**
+```text
+>> Prediction Левски София vs ЦСКА София
+🏠 Левски София Win: 41%
+🤝 Draw: 29%
+🛫 ЦСКА София Win: 30%
+```
 
 ---
 
@@ -961,57 +807,28 @@ See [Match Management](#match-management) section for full documentation.
 
 ### Identifier Resolution
 
-Many commands accept `club_identifier` or `player_identifier` parameters. The system resolves these using:
+Many commands accept club, player, match, or league identifiers.
 
-1. **Exact match** (case-insensitive): "Левски" matches club name "Левски"
-2. **Numeric ID**: Integer values match database ID directly
-3. **Fuzzy match** (contains): "Лев" matches "Левски" if no exact match
+Resolution strategy:
 
-**Examples:**
-```
->> покажи играчи на клуб 1        # Uses club ID
->> покажи играчи на клуб Левски   # Exact name match
->> покажи играчи на клуб Лев      # Contains match (finds Левски)
-```
+1. Exact case-insensitive match
+2. Numeric ID match
+3. Partial contains fallback in some repositories
 
 ### Date Format
 
-All dates use ISO 8601 format: `YYYY-MM-DD`
+Dates use:
 
-**Examples:**
-- `2025-03-15`
-- `2024-12-31`
-- `2025-01-01`
-
-**Validation:** Must be a valid calendar date and not in the future (for birth dates).
+```text
+YYYY-MM-DD
+```
 
 ### Position Codes
 
-Player positions use 2-letter codes:
 - `GK` - Goalkeeper
 - `DF` - Defender
 - `MF` - Midfielder
 - `FW` - Forward
-
----
-
-## Known Issues & Limitations
-
-### 1. NLU Pattern Ordering (FIXED)
-
-The NLU intent ordering was fixed by reordering `intents.json` — specific patterns now come before generic ones. `add_club_to_league`, `remove_club_from_league`, `delete_player`, `list_all_players`, and `record_match` all work correctly from their primary patterns.
-
-### 2. `record_match` (FIXED)
-
-The primary pattern `"запиши мач [home] срещу [away] дата [date] резултат [hg]-[ag]"` now correctly returns `record_match` intent.
-
-### 3. `record_event` Parameter Extraction
-
-The `event_type` parameter may not be properly extracted from NLU, though the command appears to work. The router might be inferring it from the pattern tag. This needs verification.
-
-### 4. Encoding Issues
-
-Bulgarian error messages may display incorrectly in Windows console (cp1252 vs cp1251). This affects test output but not actual functionality.
 
 ---
 
@@ -1025,30 +842,35 @@ Bulgarian error messages may display incorrectly in Windows console (cp1252 vs c
 | `покажи клубове` | List all clubs | - |
 | `изтрий клуб` | Delete club | club_name |
 | `редактирай клуб` | Update club | club_name, new_name |
-| `добави играч` | Add player | full_name, club, position, number, nationality, birth_date, status |
-| `покажи играчи` | List players | club_identifier (optional) |
-| `изтрий играч` | Delete player | player_identifier |
+| `добави играч` | Add player | full_name, club_identifier, position, number, nationality, birth_date, status |
+| `покажи играчи` | List players in club | club_identifier |
+| `покажи всички играчи` | List all players | - |
 | `смени позиция` | Update player position | player_identifier, new_position |
 | `смени номер` | Update player number | player_identifier, new_number |
 | `смени статус` | Update player status | player_identifier, new_status |
-| `покажи статистика` | Club stats | club_identifier |
-| `покажи статистика на играч` | Player stats | player_identifier |
-| `покажи метрики` | Player advanced metrics | player_identifier |
-| `трансферирай играч` | Transfer player | player_identifier, to_club |
-| `запиши мач` | Record match | home_team, away_team, date, home_goals, away_goals |
+| `изтрий играч` | Delete player | player_identifier |
+| `запиши мач` | Record match | home_team, away_team, match_date, home_goals, away_goals |
 | `покажи мач` | Show match details | match_id |
-| `запиши събитие` | Log in-game event | player_identifier, match_id, event_type, minute |
-| `покажи кръг` | Show round matches | round_no, league_name, season |
+| `запиши гол / асист / картон / поява` | Record event | player_identifier, match_id, minute/event_type |
 | `покажи събития` | Show match events | match_id |
+| `покажи кръг` | Show round matches | round_no, league_name |
+| `покажи мачове в лига` | Show fixtures | league_identifier |
 | `създай лига` | Create league | league_name, season |
 | `добави клуб в лига` | Add club to league | club_identifier, league_identifier |
 | `премахни отбор от лига` | Remove club from league | club_identifier, league_identifier |
 | `покажи отбори в лига` | List league teams | league_identifier |
 | `генерирай кръгове` | Generate fixtures | league_identifier |
 | `покажи класиране` | Show league standings | league_identifier |
+| `покажи статистика на клуб` | Club statistics | club_identifier |
+| `покажи статистика на играч` | Player statistics | player_identifier |
+| `покажи метрики на играч` | Advanced player metrics | player_identifier |
+| `покажи трансфери на клуб` | Club transfer history | club_identifier |
+| `покажи трансфери на играч` | Player transfer history | player_identifier |
+| `трансфер / трансферирай играч` | Transfer player | player_identifier, from_club/to_club |
+| `Prediction / Predict / Прогноза` | Match prediction | team1, team2 |
 
 ---
 
-**Document Version:** 1.1  
-**Last Updated:** 2026-06-06  
-**Based on:** `intents.json` (28 intents) and service layer implementation
+**Document Version:** 2.0  
+**Last Updated:** 2026-06-12  
+**Based on:** current `src/chatbot/intents.json` and current router/service behavior
