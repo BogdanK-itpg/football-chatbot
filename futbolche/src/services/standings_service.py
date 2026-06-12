@@ -7,7 +7,9 @@ AUTO_MARK_PLAYED = True
 
 
 def calculate_standings(league_name: str, season: Optional[str] = None) -> List[Dict]:
-    if season:
+    if str(league_name).isdigit():
+        league = standings_repo.get_league_by_id(int(league_name))
+    elif season:
         league = standings_repo.get_league_by_name_and_season(league_name, season)
     else:
         league = standings_repo.get_league_by_name(league_name)

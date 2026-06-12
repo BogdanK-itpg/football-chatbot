@@ -5,11 +5,10 @@ import services.standings_service as standings
 
 def handle_show_standings(params):
     league_name = params.get('league_identifier') or params.get('league_name')
-    season = params.get('season')
     if not league_name:
-        return "Формат: покажи класиране [лига] [сезон]"
+        return "Формат: покажи класиране [лига]"
 
-    table = standings.calculate_standings(league_name, season)
+    table = standings.calculate_standings(league_name)
     if not table:
         return f"Няма намерена лига '{league_name}' или лигата няма отбори."
 

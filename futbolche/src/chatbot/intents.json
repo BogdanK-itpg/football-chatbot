@@ -39,9 +39,7 @@
     {
       "tag": "add_club_to_league",
       "patterns": [
-        "добави клуб [club_identifier] в лига [league_identifier] [season]",
         "добави клуб [club_identifier] в лига [league_identifier]",
-        "включи [club_identifier] в [league_identifier] [season]",
         "включи [club_identifier] в [league_identifier]"
       ],
       "responses": ["Клубът беше добавен в лигата."],
@@ -50,9 +48,7 @@
     {
       "tag": "get_league_teams",
       "patterns": [
-        "покажи отбори в лига [league_identifier] [season]",
         "покажи отбори в лига [league_identifier]",
-        "покажи отборите на [league_identifier] [season]",
         "покажи отборите на [league_identifier]"
       ],
       "responses": ["Ето отборите в лигата:"],
@@ -61,11 +57,8 @@
     {
       "tag": "generate_round_robin",
       "patterns": [
-        "генерирай кръгове за лига [league_identifier] [season]",
         "генерирай кръгове за лига [league_identifier]",
-        "създай кръгове [league_identifier] [season]",
         "създай кръгове [league_identifier]",
-        "генерирай програма [league_identifier] [season]",
         "генерирай програма [league_identifier]"
       ],
       "responses": ["Календарът беше генериран."],
@@ -74,13 +67,7 @@
     {
       "tag": "get_standings",
       "patterns": [
-        "покажи класиране [league_identifier] за сезон [season]",
-        "покажи класиране [league_identifier] сезон [season]",
-        "покажи класиране [league_identifier] [season]",
         "покажи класиране [league_identifier]",
-        "класиране на лига [league_identifier] за сезон [season]",
-        "класиране на лига [league_identifier] сезон [season]",
-        "класиране на лига [league_identifier] [season]",
         "класиране на лига [league_identifier]"
       ],
       "responses": ["Ето класирането:"],
@@ -89,9 +76,7 @@
     {
       "tag": "get_fixtures",
       "patterns": [
-        "покажи мачове в лига [league_identifier] [season]",
         "покажи мачове в лига [league_identifier]",
-        "покажи кръгове за лига [league_identifier] [season]",
         "покажи кръгове за лига [league_identifier]"
       ],
       "responses": ["Ето мачовете:"],
@@ -274,9 +259,9 @@
     },
     {
       "tag": "show_round",
-      "patterns": ["покажи кръг [round_no] [league_name] [season]", "покажи кръг [round_no] [league_name]"],
+      "patterns": ["покажи кръг [round_no] [league_name]"],
       "responses": ["Ето мачовете за този кръг:"],
-      "examples": ["покажи кръг 1 Първа Лига 2025"]
+      "examples": ["покажи кръг 1 Първа Лига"]
     },
     {
       "tag": "record_match",

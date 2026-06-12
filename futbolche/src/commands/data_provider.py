@@ -63,7 +63,7 @@ def _get_league_options() -> List[Tuple[str, str]]:
         rows = leagues_repo.get_all()
         if not rows:
             return []
-        return [(f"{r['name']} ({r['season']})", r["name"]) for r in rows]
+        return [(f"{r['name']} ({r['season']})", str(r["id"])) for r in rows]
     except Exception:
         return []
 
