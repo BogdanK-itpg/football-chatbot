@@ -120,12 +120,11 @@ futbolche/
 │   │   ├── leagues_repo.py     # Leagues + league_teams SQL queries
 │   │   └── events_repo.py      # Events SQL queries
 │   ├── handlers/
-│   │   └── handler_matches.py  # Match command handlers (show_round, save_result, etc.)
+│   │   └── handler_matches.py  # Match command handlers (show_round, show_events)
 │   ├── utils/
 │   │   ├── __init__.py
 │   │   └── logger.py           # Command logging (append to commands.log)
 │   ├── validators.py           # Match event validation helpers
-│   ├── state.py                # Current match context management
 │   ├── db.py                   # Database connection, execute_query, fetch_all, fetch_one
 │   └── main.py                 # CLI entry point
 ├── sql/
@@ -429,10 +428,6 @@ If a command fails, review the error message and adjust your input accordingly.
 - запиши поява [player_identifier] в мач [match_id]
 - покажи мачове в лига [league_identifier]
 - покажи кръг [round_no] [league_name] [season]
-- резултат [home_team]-[away_team] [home_goals]:[away_goals] запиши
-- гол [player_name] [team_name] [minute] минута
-- картон [player_name] [team_name] [card_type] [minute]
-- избери мач [match_id]
 - покажи събития [match_id]
 
 Лиги:

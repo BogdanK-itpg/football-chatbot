@@ -10,8 +10,8 @@ def log_command(raw_input: str, intent: str, status: str, reason: str = "", affe
 
     Format:
     DateTime       | Intent        | Status | Raw              | Reason         | IDs
-    2025-01-01Z    | add_goal      | OK     | Гол Иван 23 мин  |                | match=5,player=12
-    2025-01-01Z    | save_result   | ERROR  | Резултат ...      | Duplicate score | match=5
+    2025-01-01Z    | record_match  | OK     | Запиши мач ...    |                | match=5
+    2025-01-01Z    | record_event  | ERROR  | Запиши гол ...    | Invalid minute  | match=5
     """
     try:
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

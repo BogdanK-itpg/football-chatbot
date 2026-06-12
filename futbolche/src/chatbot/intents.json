@@ -267,12 +267,6 @@
       "examples": ["трансфер [player_identifier] от [from_club] в [to_club_identifier]", "трансферирай играч [player_identifier] в клуб [club_identifier]"]
     },
     {
-      "tag": "select_match",
-      "patterns": ["избери мач [match_id]"],
-      "responses": ["Мачът е избран."],
-      "examples": ["избери мач 5"]
-    },
-    {
       "tag": "show_events",
       "patterns": ["покажи събития [match_id]", "покажи събития", "събития за мач [match_id]"],
       "responses": ["Ето събитията в мача:"],
@@ -283,24 +277,6 @@
       "patterns": ["покажи кръг [round_no] [league_name] [season]", "покажи кръг [round_no] [league_name]"],
       "responses": ["Ето мачовете за този кръг:"],
       "examples": ["покажи кръг 1 Първа Лига 2025"]
-    },
-    {
-      "tag": "save_result",
-      "patterns": ["резултат [home_team]-[away_team] [home_goals]:[away_goals] запиши"],
-      "responses": ["Резултатът е записан."],
-      "examples": ["резултат Левски-ЦСКА 2:1 запиши"]
-    },
-    {
-      "tag": "add_goal",
-      "patterns": ["гол [player_name] [team_name] [minute] минута"],
-      "responses": ["Голът е записан."],
-      "examples": ["гол Иван Иванов Левски 23 минута"]
-    },
-    {
-      "tag": "add_card",
-      "patterns": ["картон [player_name] [team_name] [card_type] [minute]"],
-      "responses": ["Картонът е записан."],
-      "examples": ["картон Петър Петров ЦСКА Y 55"]
     },
     {
       "tag": "record_match",

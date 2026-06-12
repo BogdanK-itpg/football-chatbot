@@ -8,10 +8,6 @@ import services.transfers_service as transfers
 import services.leagues_service as leagues
 from handlers.handler_matches import (
     handle_show_round,
-    handle_save_result,
-    handle_add_goal,
-    handle_select_match,
-    handle_add_card,
     handle_show_events,
 )
 from handlers.handler_standings import handle_show_standings
@@ -23,7 +19,7 @@ CATEGORIES = {
     "Клубове": ["add_club", "list_clubs", "update_club", "delete_club"],
     "Играчи": ["add_player", "list_players", "list_all_players", "update_player_position", "update_player_number", "update_player_status", "delete_player", "transfer_player", "show_transfers_player", "show_transfers_club"],
     "Статистика": ["club_statistics", "player_statistics", "player_metrics"],
-    "Мачове": ["record_match", "show_match", "record_event", "get_fixtures", "show_round", "save_result", "add_goal", "add_card", "select_match", "show_events", "predict_match"],
+    "Мачове": ["record_match", "show_match", "record_event", "get_fixtures", "show_round", "show_events", "predict_match"],
     "Лиги": ["create_league", "add_club_to_league", "remove_club_from_league", "get_league_teams", "generate_round_robin", "get_standings", "get_fixtures"],
 }
 
@@ -72,18 +68,6 @@ def _route(intent: str, params: Optional[Dict[str, str]]) -> str:
     # --- Match commands (new Bulgarian spec) ---
     if intent == 'show_round':
         return handle_show_round(params or {})
-
-    if intent == 'save_result':
-        return handle_save_result(params or {})
-
-    if intent == 'add_goal':
-        return handle_add_goal(params or {})
-
-    if intent == 'select_match':
-        return handle_select_match(params or {})
-
-    if intent == 'add_card':
-        return handle_add_card(params or {})
 
     if intent == 'show_events':
         return handle_show_events(params or {})

@@ -1039,10 +1039,6 @@ Bulgarian error messages may display incorrectly in Windows console (cp1252 vs c
 | `покажи мач` | Show match details | match_id |
 | `запиши събитие` | Log in-game event | player_identifier, match_id, event_type, minute |
 | `покажи кръг` | Show round matches | round_no, league_name, season |
-| `резултат ... запиши` | Save match result | home_team, away_team, home_goals, away_goals |
-| `гол ... минута` | Add goal event | player_name, team_name, minute |
-| `картон ...` | Add card event | player_name, team_name, card_type, minute |
-| `избери мач` | Select active match | match_id |
 | `покажи събития` | Show match events | match_id |
 | `създай лига` | Create league | league_name, season |
 | `добави клуб в лига` | Add club to league | club_identifier, league_identifier |
