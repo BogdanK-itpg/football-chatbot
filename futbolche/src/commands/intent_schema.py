@@ -176,6 +176,7 @@ def _intent_tag_to_label(tag: str) -> str:
         "show_match": "Покажи мач",
         "predict_match": "Прогноза за мач",
         "record_event": "Запиши събитие",
+        "end_match": "Приключи мач",
     }
     return LABEL_MAP.get(tag, tag.replace("_", " ").title())
 

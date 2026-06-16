@@ -252,6 +252,16 @@
       "examples": ["трансфер [player_identifier] от [from_club] в [to_club_identifier]", "трансферирай играч [player_identifier] в клуб [club_identifier]"]
     },
     {
+      "tag": "end_match",
+      "patterns": [
+        "приключи мач [match_id]",
+        "закрий мач [match_id]",
+        "завърши мач [match_id]"
+      ],
+      "responses": ["Мачът е приключен."],
+      "examples": ["приключи мач [match_id]"]
+    },
+    {
       "tag": "show_events",
       "patterns": ["покажи събития [match_id]", "покажи събития", "събития за мач [match_id]"],
       "responses": ["Ето събитията в мача:"],

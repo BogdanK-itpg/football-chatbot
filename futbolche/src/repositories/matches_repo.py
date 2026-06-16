@@ -75,7 +75,10 @@ def set_score(match_id: int, home_goals: int, away_goals: int):
 
 
 def set_played(match_id: int):
-    return execute("UPDATE matches SET is_played = 1 WHERE id = ?", (match_id,))
+    return execute(
+        "UPDATE matches SET home_goals = COALESCE(home_goals, 0), away_goals = COALESCE(away_goals, 0), is_played = 1 WHERE id = ?",
+        (match_id,)
+    )
 
 
 def increment_score(match_id: int, is_home: bool):

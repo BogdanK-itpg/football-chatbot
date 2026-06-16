@@ -12,7 +12,7 @@ CATEGORIES = {
                "transfer_player", "show_transfers_player", "show_transfers_club"],
     "Статистика": ["club_statistics", "player_statistics", "player_metrics"],
     "Мачове": ["record_match", "show_match", "record_event",
-               "show_round", "show_events", "predict_match"],
+               "end_match", "show_round", "show_events", "predict_match"],
     "Лиги": ["create_league", "add_club_to_league", "remove_club_from_league",
               "get_league_teams", "generate_round_robin", "get_standings", "get_fixtures"],
     "Други": ["help", "exit"],

@@ -123,15 +123,15 @@ class TestRouter(BasePatchedTestCase):
             self.assertEqual(self.router._route('show_match', {'match_id': '1'}), '2025-01-01: A 1-0 B')
         self.assertIn('Недостатъчни параметри', self.router._route('record_event', None))
         with mock.patch('chatbot.router.players.get_player_id', return_value=None):
-            self.assertIn('не съществува', self.router._route('record_event', {'match_id': '1', 'event_type': 'goal', 'player_identifier': 'P'}))
+            self.assertIn('не съществува', self.router._route('record_event', {'match_id': '1', 'event_type': 'гол', 'player_identifier': 'P'}))
         with mock.patch('chatbot.router.players.get_player_id', return_value=1), \
              mock.patch('repositories.players_repo.get_by_id', return_value=None):
-            self.assertIn('няма клуб', self.router._route('record_event', {'match_id': '1', 'event_type': 'goal', 'player_identifier': 'P'}))
+            self.assertIn('няма клуб', self.router._route('record_event', {'match_id': '1', 'event_type': 'гол', 'player_identifier': 'P'}))
         with mock.patch('chatbot.router.players.get_player_id', return_value=1), \
              mock.patch('repositories.players_repo.get_by_id', return_value={'club_id': 2}), \
-             mock.patch('chatbot.router.matches.record_event', return_value='recorded'):
-            self.assertIn('цяло число', self.router._route('record_event', {'match_id': 'bad', 'event_type': 'goal', 'player_identifier': 'P'}))
-            self.assertEqual(self.router._route('record_event', {'match_id': '1', 'event_type': 'goal', 'player_identifier': 'P'}), 'recorded')
+             mock.patch('chatbot.router.matches.record_event_safe', return_value='recorded'):
+            self.assertIn('цяло число', self.router._route('record_event', {'match_id': 'bad', 'event_type': 'гол', 'player_identifier': 'P'}))
+            self.assertEqual(self.router._route('record_event', {'match_id': '1', 'event_type': 'гол', 'player_identifier': 'P'}), 'recorded')
 
     def test_remaining_routes(self):
         with mock.patch('chatbot.router.handle_show_standings', return_value='standings'):

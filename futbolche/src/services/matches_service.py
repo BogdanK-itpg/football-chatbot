@@ -1,5 +1,11 @@
 from typing import Optional
 from repositories import clubs_repo, players_repo, matches_repo, events_repo, leagues_repo
+from validators import (
+    validate_minute,
+    validate_player_in_match,
+    validate_no_goal_after_red,
+    validate_card_allowed,
+)
 
 
 def _resolve_club_id(club_identifier):
@@ -122,6 +128,50 @@ def record_event(match_id, player_id, club_id, event_type, minute=None, card_typ
     if res is None:
         return "Грешка при запис на събитието."
     return "Събитието беше записано успешно."
+
+
+def record_event_safe(match_id, player_id, club_id, event_type, minute=None, card_type=None, is_own_goal=0):
+    """Record a match event with full validation and auto score update."""
+    if not matches_repo.exists(match_id):
+        return "Мачът не съществува."
+    if matches_repo.is_played(match_id):
+        return "Мачът вече е приключен."
+    if minute is not None:
+        valid_min, err_min = validate_minute(minute)
+        if not valid_min:
+            return err_min
+    valid_player, err_player = validate_player_in_match(player_id, match_id)
+    if not valid_player:
+        return err_player
+    if event_type == 'goal':
+        valid_goal, err_goal = validate_no_goal_after_red(player_id, match_id)
+        if not valid_goal:
+            return err_goal
+    if event_type in ('yellow', 'red'):
+        valid_card, err_card = validate_card_allowed(player_id, match_id, card_type or event_type[0].upper())
+        if not valid_card:
+            return err_card
+    res = events_repo.create(match_id, player_id, club_id, event_type, minute, card_type, is_own_goal)
+    if res is None:
+        return "Грешка при запис на събитието."
+    if event_type == 'goal':
+        match = matches_repo.get_by_id(match_id)
+        if match:
+            is_home = (club_id == match['home_team_id'])
+            matches_repo.increment_score(match_id, is_home)
+    if minute is not None and int(minute) >= 90:
+        matches_repo.set_played(match_id)
+    return "Събитието беше записано успешно."
+
+
+def end_match(match_id):
+    """Mark a match as played (is_played = 1)."""
+    if not matches_repo.exists(match_id):
+        return "Мачът не съществува."
+    if matches_repo.is_played(match_id):
+        return "Мачът вече е приключен."
+    matches_repo.set_played(match_id)
+    return f"Мач ID {match_id} е приключен."
 
 
 # ---------------------------------------------------------------------------

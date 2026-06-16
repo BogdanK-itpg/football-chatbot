@@ -170,7 +170,7 @@ class CommandBuilderPanel(ttk.Frame):
                 widget = ttk.Checkbutton(self._scroll_frame, variable=var)
                 widget.pack(anchor="w", padx=10, pady=(0, 2))
             else:
-                db_options = get_options_for_param(pname)
+                db_options = get_options_for_param(pname, node.metadata.get("tag", ""))
                 var = tk.StringVar()
                 if db_options:
                     for display, value in db_options:

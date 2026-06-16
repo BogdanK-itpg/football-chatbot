@@ -19,7 +19,7 @@ CATEGORIES = {
     "Клубове": ["add_club", "list_clubs", "update_club", "delete_club"],
     "Играчи": ["add_player", "list_players", "list_all_players", "update_player_position", "update_player_number", "update_player_status", "delete_player", "transfer_player", "show_transfers_player", "show_transfers_club"],
     "Статистика": ["club_statistics", "player_statistics", "player_metrics"],
-    "Мачове": ["record_match", "show_match", "record_event", "get_fixtures", "show_round", "show_events", "predict_match"],
+    "Мачове": ["record_match", "show_match", "record_event", "end_match", "get_fixtures", "show_round", "show_events", "predict_match"],
     "Лиги": ["create_league", "add_club_to_league", "remove_club_from_league", "get_league_teams", "generate_round_robin", "get_standings", "get_fixtures"],
 }
 
@@ -238,8 +238,25 @@ def _route(intent: str, params: Optional[Dict[str, str]]) -> str:
             return "Недостатъчни параметри. Формат: запиши събитие [event_type] [player_identifier] в мач [match_id] минута [minute]"
         match_id = params.get('match_id')
         player_name = params.get('player_identifier')
-        event_type = params.get('event_type')
+        event_type_raw = params.get('event_type')
         minute = params.get('minute')
+
+        EVENT_TYPE_MAP = {
+            'гол': ('goal', None),
+            'goal': ('goal', None),
+            'асист': ('assist', None),
+            'assist': ('assist', None),
+            'жълт картон': ('yellow', 'Y'),
+            'yellow': ('yellow', 'Y'),
+            'червен картон': ('red', 'R'),
+            'red': ('red', 'R'),
+            'поява': ('appearance', None),
+            'appearance': ('appearance', None),
+        }
+        mapped = EVENT_TYPE_MAP.get(event_type_raw)
+        if not mapped:
+            return f"Неизвестен тип събитие: '{event_type_raw}'."
+        event_type, card_type = mapped
 
         pid = players.get_player_id(player_name)
         if not pid:
@@ -247,7 +264,7 @@ def _route(intent: str, params: Optional[Dict[str, str]]) -> str:
 
         from repositories import players_repo
         player = players_repo.get_by_id(pid)
-        if not player or not player.get('club_id'):
+        if not player or player['club_id'] is None:
             return "Играчът няма клуб."
 
         try:
@@ -255,9 +272,18 @@ def _route(intent: str, params: Optional[Dict[str, str]]) -> str:
         except (ValueError, TypeError):
             return "ID на мача трябва да бъде цяло число."
 
-        return matches.record_event(
-            match_id, pid, player['club_id'], event_type, minute=minute
+        return matches.record_event_safe(
+            match_id, pid, player['club_id'], event_type, minute=minute, card_type=card_type
         )
+
+    if intent == 'end_match':
+        if not params or 'match_id' not in params:
+            return "Формат: приключи мач [match_id]"
+        try:
+            match_id = int(params['match_id'])
+        except (ValueError, TypeError):
+            return "ID на мача трябва да бъде цяло число."
+        return matches.end_match(match_id)
 
     if intent == 'get_standings':
         return handle_show_standings(params or {})

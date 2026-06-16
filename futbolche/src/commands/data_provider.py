@@ -1,7 +1,7 @@
 from typing import List, Tuple
 
 
-def get_options_for_param(param_name: str) -> List[Tuple[str, str]]:
+def get_options_for_param(param_name: str, intent_tag: str = "") -> List[Tuple[str, str]]:
     if not param_name:
         return []
     name_lower = param_name.lower()
@@ -17,7 +17,8 @@ def get_options_for_param(param_name: str) -> List[Tuple[str, str]]:
     if "league" in name_lower:
         return _get_league_options()
     if name_lower == "match_id":
-        return _get_match_options()
+        only_unplayed = intent_tag in ("record_event", "end_match")
+        return _get_match_options(only_unplayed=only_unplayed)
     if "season" in name_lower or name_lower == "season":
         return _get_season_options()
     return []
@@ -68,7 +69,7 @@ def _get_league_options() -> List[Tuple[str, str]]:
         return []
 
 
-def _get_match_options() -> List[Tuple[str, str]]:
+def _get_match_options(only_unplayed: bool = False) -> List[Tuple[str, str]]:
     try:
         from repositories import matches_repo
         rows = matches_repo.get_all()
@@ -76,6 +77,8 @@ def _get_match_options() -> List[Tuple[str, str]]:
             return []
         result = []
         for r in rows:
+            if only_unplayed and r["is_played"]:
+                continue
             is_played = r["is_played"]
             hg = r["home_goals"] if is_played else "?"
             ag = r["away_goals"] if is_played else "?"
